@@ -89,12 +89,15 @@ if args.p2:
                 
     infections = 0
     cleans = 0
+    flags = 0
+    weakens = 0
     for i in range(0,10000000):
         #print "Iter: %s Infected: %s" % (i,infected,)
         nstate = infected.get(pos,"C")
         if nstate == "C":
             facing = left[facing]
             infected[pos] = "W"
+            weakens = weakens + 1
         elif nstate == "W":
             facing = facing
             infected[pos] = "I"
@@ -102,6 +105,7 @@ if args.p2:
         elif nstate == "I":
             facing = right[facing]
             infected[pos] = "F"
+            flags = flags + 1
         elif nstate == "F":
             facing = reverse[facing]
             infected[pos] = "C"
@@ -109,4 +113,4 @@ if args.p2:
         pos = (pos[0] + facing[0], pos[1] + facing[1])
 
 
-    print "Infections: %s cleans: %s" % (infections,cleans,)
+    print "Infections: %s flags: %s weakens: %s cleans: %s" % (infections,flags,weakens,cleans,)
