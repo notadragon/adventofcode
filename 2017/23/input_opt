@@ -1,0 +1,32 @@
+set b 99
+set c b
+jnz a 2
+jnz 1 5
+mul b 100
+sub b -100000
+set c b
+sub c -17000
+setifprime f b//set f 1
+pass//set d 2
+pass//set e 2
+pass//set g d
+pass//mul g e // d*(2+n)
+pass//sub g b // d*(2+n)-b
+pass//jnz g 2
+pass//set f 0
+pass//sub e -1
+pass//set g e // e
+pass//sub g b // e-b
+pass//jnz g -8
+pass//sub d -1
+pass//set g d
+pass//sub g b
+pass//jnz g -13
+jnz f 2
+sub h -1
+set g b
+sub g c
+jnz g 2
+jnz 1 3
+sub b -17
+jnz 1 -23
