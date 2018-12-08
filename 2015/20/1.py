@@ -1,65 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re, itertools, math
+import argparse, re
 
-lineRe = re.compile("(\\d+)")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-puzzle = None
+args = parser.parse_args()
 
-def total(x):
-    total = 0
-    end=int(math.floor(math.sqrt(x)))
-    for i in range(1,end+1):
-        if x % i == 0:
-            total += (i*10)
-            iv = x/i
-            if i != iv:
-                total += (iv*10)
-    return total
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-def findHouse(y):
-    for x in itertools.count():
-        xval = total(x)
-        if xval >= y:
-            return (x,xval)
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-def findHouse2(y):
-    for x in itertools.count():
-        xval = total2(x)
-        if xval >= y:
-            return (x,xval)
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
+        continue
 
-def total2(x):
-    total = 0
-    minval = x/50
-    
-    end=int(math.floor(math.sqrt(x)))
-    for i in range(1,end+1):
-        if x % i == 0:
-            iv = x/i
-
-            if i*50 >= x:
-                total += (iv*11)
-            if i != iv and i <= 50:
-                total += (iv*11)
-
-    return total
-
-#for x in itertools.count():
-    #print "House %d got %d presents" % (x,total(x),)
-    #print "House %d got %d presents" % (x,total2(x),)
-
-        
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
-
-    #print "House %d got %d presents" % findHouse(int(line))
-    print "House %d got %d presents" % findHouse2(int(line))
+    # Process input line
 
 
+if args.p1:
+    print("Doing part 1")
 
     
+if args.p2:
+    print("Doing part 2")

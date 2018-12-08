@@ -1,142 +1,110 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re
+import argparse, re
 
-instructionRe=re.compile("(?:(\\d+)|(?:(?:(\\d+)|([a-z]+)) (AND|OR) ([a-z]+))|(?:([a-z]+) ([LR]SHIFT) (\\d+))|(?:NOT ([a-z]+))|([a-z]+)) -> ([a-z]+)")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-circuit={}
+args = parser.parse_args()
 
-class Fixed:
-    def __init__(self,val,outKey):
-        self.val=val
-        self.outKey=outKey
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    def eval(self,signals):
-        return self.val
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-    def __str__(self):
-        return "Fixed: %s -> %s" % (self.val,self.outKey,)
+lineRe = re.compile("(?:([a-z]+|[0-9]+) )?(?:(AND|OR|LSHIFT|RSHIFT|NOT) )?([a-z]+|[0-9]+) -> ([a-z]+)")
+instrs = {}
 
-class Copy:
-    def __init__(self,key,outKey):
-        self.key = key
-        self.outKey = outKey
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
+        continue
 
-    def eval(self,signals):
-        if not signals.has_key(self.key):
-            return None
-        return signals[self.key]
-
-    def __str__(self):
-        return "Copy:%s -> %s" % (self.key,self.outKey)
-
-
-class BaseOp:
-    def __init__(self,op,outKey):
-        self.outKey = outKey
-        self.op = op
-        
-    def applyOp(self,lhs,rhs):
-        if self.op == "NOT":
-            output = ~ lhs & 0xffff
-        elif self.op == "RSHIFT":
-            output = lhs >> rhs
-        elif self.op == "LSHIFT":
-            output = lhs << rhs & 0xffff
-        elif self.op == "AND":
-            output = lhs & rhs
-        elif self.op == "OR":
-            output = lhs | rhs
-
-        print "%s APPLYING:%s to:%s and:%s -> %s" % (self.outKey,self.op,lhs,rhs,output,)
-        return output
-
-    def __str__(self):
-        return "%s %s %s -> %s" % (self.lhs,self.op,self.rhs,self.outKey,)
-    
-class FixedOp(BaseOp):
-    def __init__(self,op,lhs,rhs,outKey):
-        BaseOp.__init__(self,op,outKey)
-        self.lhs=lhs
-        self.rhs=rhs
-
-    def eval(self,signals):
-        if not signals.has_key(self.lhs):
-            return None
-        lhsVal=signals[self.lhs]
-        rhsVal=self.rhs
-        return self.applyOp(lhsVal,rhsVal)
-
-
-
-class BinOp(BaseOp):
-    def __init__(self,op,lhs,rhs,outKey):
-        BaseOp.__init__(self,op,outKey)
-        self.lhs=lhs
-        self.rhs=rhs
-
-    def eval(self,signals):
-        if not signals.has_key(self.lhs):
-            return None
-        if not signals.has_key(self.rhs):
-            return None
-        lhsVal=signals[self.lhs]
-        rhsVal=signals[self.rhs]
-        return self.applyOp(lhsVal,rhsVal)
-
-
-for line in open("input").readlines():
-    line=line.strip()
-    if not line: continue
-
-    m=instructionRe.match(line)
+    # Process input line
+    m = lineRe.match(x)
     if not m:
-        print "Invalid line: %s" % (line,)
+        print("invalid line: %s" % (x,))
+        continue
 
-    output=m.group(11)
+    instrs[ m.group(4) ] = ( m.group(1), m.group(2), m.group(3), m.group(4),) 
 
-    if circuit.has_key(output):
-        print "Multiple inputs for: %s" % (output,)
-    elif m.group(1):
-        circuit[output]=Fixed(int(m.group(1)),output)
-    elif m.group(4):
-        if m.group(2):
-            circuit[output]=FixedOp(m.group(4),m.group(5),int(m.group(2)),output)
+#print("Instrs: %s" % (instrs,))
+
+numRe = re.compile("[0-9]+")
+
+def run(signals):
+    def getval(signals,reg):
+        if numRe.match(reg):
+            return int(reg)
+        elif reg in signals:
+            return signals[reg]
         else:
-            circuit[output]=BinOp(m.group(4),m.group(3),m.group(5),output)
-    elif m.group(7):
-        circuit[output]=FixedOp(m.group(7),m.group(6),int(m.group(8)),output)
-    elif m.group(9):
-        circuit[output]=FixedOp("NOT",m.group(9),None,output)
-    elif m.group(10):
-        circuit[output]=Copy(m.group(10),output)
-        
-    print "line:%-20s output:%-2s eval:%s" % (line, output, circuit.get(output,"None"),)
-
+            return None
     
-
-def build_signals(circuit,signals):
     while True:
-        numApplied=0
+        numdone = 0
 
-        for signal in circuit:
-            if signals.has_key(signal):
-                continue
-            
-            func=circuit[signal]
-            val=func.eval(signals)
-            if val != None:
-                signals[signal]=val
-                numApplied=numApplied+1
+        for fromreg, op, toreg, wire in instrs.values():
+            if not wire in signals:
+                newval = None
+                if not op:
+                    toval = getval(signals,toreg)
+                    if toval != None:
+                        newval = toval
+                elif op == "NOT":
+                    toval = getval(signals,toreg)
+                    if toval != None:
+                        newval = ~toval
+                elif op == "AND":
+                    fromval = getval(signals,fromreg)
+                    toval = getval(signals,toreg)
+                    if fromval != None and toval != None:
+                        newval = fromval & toval
+                elif op == "OR":
+                    fromval = getval(signals,fromreg)
+                    toval = getval(signals,toreg)
+                    if fromval != None and toval != None:
+                        newval = fromval | toval
+                elif op == "LSHIFT":
+                    fromval = getval(signals,fromreg)
+                    toval = getval(signals,toreg)
+                    if fromval != None and toval != None:
+                        newval = fromval << toval
+                elif op == "RSHIFT":
+                    fromval = getval(signals,fromreg)
+                    toval = getval(signals,toreg)
+                    if fromval != None and toval != None:
+                        newval = fromval >> toval
+                else:
+                    print ("Unkonwn Op:%s" % (op,))
+                if newval != None:
+                    numdone += 1
+                    signals[wire] = newval & 0xffff
+                    
+
+        if numdone == 0:
+            break
+
+#    for k in sorted(signals.keys()):
+#        print ("%s: %s" % (k,signals[k],))
     
-        if numApplied == 0:
-            break;
-    return signals
+p1signals = {}
+run(p1signals)
 
-signals=build_signals(circuit,{})
-aVal=signals["a"]
+p2signals = {"b":p1signals["a"],}
+run(p2signals)
+             
+if args.p1:
+    print("Doing part 1")
 
-signals=build_signals(circuit,{"b":aVal})
-bVal=signals["a"]
+    print("a: %s" % (p1signals["a"],))
+    
+if args.p2:
+    print("Doing part 2")
 
-print "aVal: %s newAVal: %s" % (aVal,bVal,)
+    print("a: %s" % (p2signals["a"],))

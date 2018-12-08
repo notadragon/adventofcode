@@ -1,100 +1,101 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re
+import argparse, re
 
-lineRe = re.compile("\"(.*)\"")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-escapeRe = re.compile("\\\\\\\\|\\\\\"|\\\\x[0-9a-f][0-9a-f]")
+args = parser.parse_args()
 
-codesize=0
-datasize=0
-escapedsize=0
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-def encode(line):
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid String %s" % (line,)
-        return None
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-    string = m.group(1)
-    
-    out = ""
-    escaping = False
-    hexnum = ""
-    
-    for x in string:
-        if x == "\"":
-            if escaping == 1:
-                out = out + "\""
-                escaping = escaping - 1
+lines = []
+
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
+        continue
+
+    # Process input line
+    lines.append(x)
+
+def decode(x):
+    output = []
+    i = 1
+    while i < len(x)-1:
+        c = x[i]
+        i = i + 1
+        
+        if c == "\\":
+            c2 = x[i]
+            i = i + 1
+            if c2 == "\\":
+                output.append("\\")
+            elif c2 == "\"":
+                output.append("\"")
+            elif c2 == "x":
+                h1 = x[i]
+                h2 = x[i+1]
+                i = i + 2
+                output.append(".")
             else:
-                print "Unescaped \" in %s" % (line,)
-                return None
-        elif x == "\\":
-            if escaping:
-                out = out + "\\"
-                escaping = 0
-            else:
-                escaping = 1
-        elif x == "x":
-            if escaping == 1:
-                escaping = 2
-            else:
-                out = out + x
-        elif x in "0123456789abcdef":
-            if escaping == 2:
-                hexnum = x
-                escaping = 3
-            elif escaping == 3:
-                hexnum = hexnum + x
-                out = out + chr(int(hexnum,16))
-                escaping = 0
-            else:
-                out = out + x
+                output.append("\\")
+                output.append("\\")
         else:
-            if escaping != 0:
-                print "Invalid escape %s in %s" % (x, line,)
-                return None
-            else:
-                out = out + x
-    return out
+            output.append(c)
+    return "".join(output)
 
-def escape(line):
-    out = ""
-    for x in line:
-        if x == "\"":
-            out = out + "\\\""
-        elif x == "\\":
-            out = out + "\\\\"
-        elif x not in "abcdefghijklmnopqrstuvwxyz01234567890":
-            out = out + "\\" + hex(ord(x))[1:]
+def encode(x):
+    output = ["\""]
+
+    for c in x:
+        if c == "\"":
+            output.append("\\\"")
+        elif c == "\\":
+            output.append("\\\\")
         else:
-            out = out + x
-    return "\"" + out + "\""
+            output.append(c)
+            
+    output.append("\"")
+            
+    return "".join(output)
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+if args.p1:
+    print("Doing part 1")
 
-    fixedLine = encode(line)
-    escapedLine = escape(line)
+    filetotal = 0
+    memtotal = 0
+    for x in lines:
+        y = decode(x)
+
+        print( "%s -> %s" % (x,y,))
+        filetotal += len(x)
+        memtotal += len(y)
+
+    print("FileTotal: %s" % (filetotal,))
+    print("MemTotal: %s" % (memtotal,))
+    print("Diff: %s" % (filetotal - memtotal,))
     
-    codesize = codesize + len(line)
-    datasize = datasize + len(fixedLine)
-    escapedsize = escapedsize + len(escapedLine)
+if args.p2:
+    print("Doing part 2")
 
-    reescaped = encode(escapedLine)
-    if reescaped != line:
-        print "Re-escaping does not work %s != %s" % (line,reescaped,)
-        break
+    filetotal = 0
+    memtotal = 0
+    for x in lines:
+        y = encode(x)
 
-    
-    reencoded = escape(fixedLine)
-    #theree are ascii characters encoded using \x.. 
-    #if reencoded != line:
-    #    print "Re-encoding does not work %s != %s" % (line,reencoded,)
-    #    break        
-    
-    print "Line (%i): %s Value(%i): %s Escaped(%i): %s" % (len(line),line,len(fixedLine),fixedLine,len(escapedLine),escapedLine)
+        print( "%s -> %s" % (x,y,))
+        filetotal += len(x)
+        memtotal += len(y)
 
-print "Total Code: %i Total Data: %i  Result: %i  Total Escaped: %i Result2: %i" % (codesize, datasize, codesize-datasize, escapedsize, escapedsize-codesize)
+    print("FileTotal: %s" % (filetotal,))
+    print("MemTotal: %s" % (memtotal,))
+    print("Diff: %s" % (filetotal - memtotal,))

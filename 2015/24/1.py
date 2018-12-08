@@ -1,109 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re, itertools, math, sys
+import argparse, re
 
-lineRe = re.compile("\\d+")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-values = []
-        
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+args = parser.parse_args()
 
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    values.append(int(line))
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-total = sum(values)
-
-print "Values:%s Total:%s" % (values,total,)
-
-def splitvals( total, maxlen, items ):
-    if maxlen == 0:
-        return
-    
-    #print "Total:%s Items: %s" % (total,items, )
-    for i in range(len(items)-1,-1,-1):
-        val = items[i]
-        if val > total:
-            continue
-
-        if val == total:
-            unuseditems = items[0:i] + items[i+1:]
-            yield ( (val,), unuseditems, )
-        elif i > 0 and (maxlen > 1 or maxlen < 0):
-
-            previtems = items[0:i]
-
-            nextitems = items[i+1:]
-            
-            for (a,b) in splitvals(total-val,maxlen-1,previtems):
-                yield ( (val,) + a, b + nextitems, )
-
-def findgroups(values):
-    grouptotal = sum(values)/3
-
-    smallestlen = -1
-
-    for (g1,r1) in splitvals(grouptotal,smallestlen,values):
-        g1l = len(g1)
-        if smallestlen < 0:
-            smallestlen = g1l
-        elif smallestlen < g1l:
-            continue
-        elif g1l < smallestlen:
-            groupings = []
-            smallestlen = g1l        
-
-        for (g2,r2) in splitvals(grouptotal,-1,r1):
-            yield (g1,g2,r2,)
-            break
-
-def qe(g):
-    out = 1
-    for x in g:
-        out *= x
-    return out
-
-smallestgroup = None
-numgroupings = 0
-smallestlen = -1
-smallestqe = -1
-for grouping in findgroups(values):
-    numgroupings += 1
-
-    if sum(grouping[0]) != sum(grouping[1]):
-        print "Invalid Grouping sum: %s" % (grouping,)
-    if sum(grouping[0]) != sum(grouping[2]):
-        print "Invalid Grouping sum: %s" % (grouping,)
-
-    if sum( [ len(x) for x in grouping ] ) != len(values):
-        print "Invalid number of items: %s" % (grouping,)
-        
-    g1l = len(grouping[0])
-    if smallestlen < 0:
-        smallestgroup = grouping
-        smallestlen = g1l
-        smallestqe = qe(grouping[0])
-
-        print "Grouping: %s len: %s qe: %s" % (grouping,smallestlen,smallestqe,)
-    elif smallestlen > g1l:
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
         continue
-    elif g1l < smallestlen:
-        smallestgroup = grouping
-        smallestlen = g1l
-        smallestqe = qe(grouping[0])
 
-        print "Grouping: %s len: %s qe: %s" % (grouping,smallestlen,smallestqe,)
-    elif g1l == smallestlen:
-        gqe = qe(grouping[0])
-        if gqe < smallestqe:
-            smallestgroup = grouping
-            smallestqe = gqe
-            print "Grouping: %s len: %s qe: %s" % (grouping,smallestlen,smallestqe,)
-        
+    # Process input line
+
+
+if args.p1:
+    print("Doing part 1")
 
     
-print "Groupings found: %s" % (numgroupings,)
+if args.p2:
+    print("Doing part 2")

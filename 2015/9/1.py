@@ -1,81 +1,59 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re
+import argparse, re, itertools
 
-lineRe = re.compile("(.*) to (.*) = (\\d+)")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-cities = set()
-distances = {}
+args = parser.parse_args()
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
+
+lineRe = re.compile("(.*) to (.*) = ([0-9]+)")
+
+locations=set()
+routes={}
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
         continue
 
-    fromLoc=m.group(1)
-    toLoc=m.group(2)
-    distance=int(m.group(3))
+    m = lineRe.match(x)
+    if not m:
+        print("Invalid line: %s" % (x,))
+        continue
     
-    cities.add(fromLoc)
-    cities.add(toLoc)
-    distances[(fromLoc,toLoc)] = distance
-    distances[(toLoc,fromLoc)] = distance
-
-
-
-print "Cities: %s" % (cities,)
-
-def minDistance(cities,path):
-    if len(path) == len(cities):
-        return path
-
-    shortest = None
-    shortestLength = 0
+    # Process input line
+    routes[(m.group(1),m.group(2),)] = int(m.group(3))
+    routes[(m.group(2),m.group(1),)] = int(m.group(3))
+    locations.add(m.group(1))
+    locations.add(m.group(2))
     
-    for city in cities:
-        if city in path:
-            continue
-        candidate = minDistance(cities,path + (city,))
-        candidateLength = distance(candidate)
-        if not shortest or candidateLength < shortestLength:
-            shortest = candidate
-            shortestLength = candidateLength
+#print("Routes:%s" % (routes,))
 
-    return shortest
+def cost(routes,path):
+    output = 0
+    for i in range(0,len(path)-1):
+        output += routes[ (path[i],path[i+1],) ]
+    return output
 
-def maxDistance(cities,path):
-    if len(path) == len(cities):
-        return path
+if args.p1:
+    print("Doing part 1")
 
-    longest = None
-    longestLength = 0
-    
-    for city in cities:
-        if city in path:
-            continue
-        candidate = maxDistance(cities,path + (city,))
-        candidateLength = distance(candidate)
-        if not longest or candidateLength > longestLength:
-            longest = candidate
-            longestLength = candidateLength
+    shortest = min( [cost(routes,path) for path in itertools.permutations(locations) ] )
+    print("Shortest path: %s" % (shortest,))
 
-    return longest
         
-def distance(path):
-    total = 0
-    prev = None
-    for p in path:
-        if prev:
-            total = total + distances[(prev,p)]
-        prev = p
-    return total
-        
-minPath = minDistance(cities,())
-print "MinPath: %s  Distance: %s" % (minPath,distance(minPath),)
+if args.p2:
+    print("Doing part 2")
 
-maxPath = maxDistance(cities,())
-print "MaxPath: %s  Distance: %s" % (minPath,distance(maxPath),)
+    shortest = max( [cost(routes,path) for path in itertools.permutations(locations) ] )
+    print("Longest path: %s" % (shortest,))

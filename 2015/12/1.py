@@ -1,57 +1,62 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re,json
+import argparse, re, json
 
-def addResult(acc,r,ignore):
-    acc["total"] = acc.get("total",0) + r.get("total",0)
-    if not ignore:
-        acc["rtotal"] = acc.get("rtotal",0) + r.get("rtotal",0)
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-def traverse(root,ignore=False):
-    out = {}
-    show=""
+args = parser.parse_args()
 
-    t = type(root)
-    if t == dict:
-        for v in root.values():
-            if v == "red":
-                ignore = True
-                break
-        
-        for key in root:
-            addResult(out,traverse(key,ignore),ignore)
-            addResult(out,traverse(root[key],ignore),ignore)
-    if t == int:
-        show=root
-        r=int(root)
-        out["total"] = out.get("total",0) + r
-        if not ignore:
-            out["rtotal"] = out.get("rtotal",0) + r
-    if t == list:
-        for v in root:
-            addResult(out,traverse(v,ignore),ignore)
-    if t == unicode:
-        show=root
-            
-    #print "T: %s  Ignore:%s %s" % (t,ignore,show,)
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    return out
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
+        continue
 
-    numberRE = re.compile("(-?\\d+)")
+    # Process input line
+    ival = x
 
-    count = 0
-    total = 0
-    for n in numberRE.findall(line):
-        count += 1
-        total += int(n)
+numberRe = re.compile("-?[0-9]+")
+if args.p1:
+    print("Doing part 1")
 
-    print "NumberTotal (%i) = %i" % (count,total,)
+    total = sum( int(x) for x in numberRe.findall(ival) )
+    print("Total: %s" % (total,))
 
-    objects = json.loads(line)
+def total(jobj):
+    if isinstance(jobj,list):
+        output = 0
+        for c in jobj:
+            output += total(c)
+        return output
+    elif isinstance(jobj,dict):
+        if "red" in jobj.values():
+            return 0
+        else:
+            output = 0
+            for v in jobj.values():
+                output += total(v)
+            return output
+    elif isinstance(jobj,int):
+        return jobj
+    else:
+        return 0
+                
     
-    output = traverse(objects)
-    print "Out:%s" % (output,)
+if args.p2:
+    print("Doing part 2")
+
+    parsed_json = json.loads(ival)
+
+    #print("Parsed: %s" % (parsed_json,))
+    print("Total:%s" % (total(parsed_json),))
+

@@ -1,88 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re, itertools
+import argparse, re
 
-lineRe = re.compile("[\\.#]+")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-lights = []
+args = parser.parse_args()
 
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
         continue
 
-    lights.append(line)
+    # Process input line
 
-print "Starting:"
-for line in lights:
-    print line
 
-def countneighbors(lights,i,j):
-    output = 0
-    for ioff in (-1,0,1):
-        for joff in (-1,0,1):
-            if ioff == 0 and joff == 0: continue
-            i2=i+ioff
-            j2=j+joff
+if args.p1:
+    print("Doing part 1")
 
-            if i2 < 0: continue
-            if j2 < 0: continue
-            if i2 >= len(lights): continue
-            if j2 >= len(lights[i2]): continue
-
-            if lights[i2][j2] == "#":
-                output += 1
-    return output
-            
-            
-def next(lights):
-    output = []
-    for i in range(0,len(lights)):
-        outrow = []
-        for j in range(0,len(lights[i])):
-            current = lights[i][j]
-            num = countneighbors(lights,i,j)
-
-            if current == "#":
-                if num == 2 or num == 3:
-                    newval = "#"
-                else:
-                    newval = "."
-            else:
-                if num == 3:
-                    newval = "#"
-                else:
-                    newval = "."
-            outrow.append(newval)
-            
-        output.append("".join(outrow))
-    return output
-
-def breaklights(lights):
-    lights[0] = "#" + lights[0][1:-1] + "#"
-    lights[-1] = "#" + lights[-1][1:-1] + "#"
-    return lights
-
-def countlights(lights):
-    output = 0
-    for line in lights:
-        for x in range(0,len(line)):
-            if line[x] == "#":
-                output += 1
-    return output
-
-l = breaklights(lights)
-for step in range(0,100):
-    l = breaklights(next(l))
-
-print
-print "Final:"
-for line in l:
-    print line
-
-print "Count:%s" % (countlights(l),)
+    
+if args.p2:
+    print("Doing part 2")

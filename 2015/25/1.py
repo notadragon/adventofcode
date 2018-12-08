@@ -1,58 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re, itertools, math, sys
+import argparse, re
 
-lineRe = re.compile("To continue, please consult the code grid in the manual.  Enter the code at row (\\d+), column (\\d+).")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-        
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+args = parser.parse_args()
 
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    row = int(m.group(1))
-    col = int(m.group(2))
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-print "Row:%s col:%s" % (row,col,)
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
+        continue
 
-startingval = 20151125
-
-def nextcode(x):
-    return x * 252533 % 33554393
-
-def codes():
-    prev = startingval
-
-    while True:
-        yield prev
-        prev = nextcode(prev)
+    # Process input line
 
 
-grid = []
-
-currow = 1
-curcol = 1
-
-for x in codes():
-    if currow <= 6 and curcol <= 6:
-        while len(grid) < currow:
-            grid.append([])
-        grid[currow-1].append( (currow,curcol,x,) )
-
-    if currow == row and curcol == col:
-        print "%s,%s = %s" % (currow,curcol,x,)
-        break
-
-    curcol += 1
-    currow -= 1
-
-    if currow == 0:
-        currow = curcol
-        curcol = 1
-    
-print "Grid: %s" % (grid,)
+if args.p1:
+    print("Doing part 1")
 
     
+if args.p2:
+    print("Doing part 2")

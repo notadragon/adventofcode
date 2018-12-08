@@ -1,77 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re, itertools
+import argparse, re
 
-lineRe = re.compile("(\\w.*): capacity (-?\\d+), durability (-?\\d+), flavor (-?\\d+), texture (-?\\d+), calories (-?\\d+)")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-vals = {}
+args = parser.parse_args()
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
-        continue
-    
-    name=m.group(1)
-    capacity = int(m.group(2))
-    durability = int(m.group(3))
-    flavor = int(m.group(4))
-    texture = int(m.group(5))
-    calories = int(m.group(6))
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-    vals[name] = [capacity,durability,flavor,texture,calories]
-    
-def getScore(ingredients):
-    output = 0
-
-    totals=[0,0,0,0]
-    for name,count in ingredients:
-        ivals = vals[name]
-        for i in range(0,4):
-            totals[i] = totals[i] + ivals[i]*count
-        
-    return reduce(lambda x,y: max(x,0)*max(y,0), totals)
-
-def getCalories(ingredients):
-    out = 0
-    for name,count in ingredients:
-        out += vals[name][4] * count
-    return out
-
-def getIngredients(names,count):
-    name = names[0]
-    othernames = names[1:]
-
-    if not othernames:
-        yield ( (name,count), )
-    
-    for i in range(0,count+1):
-        if i > 0:
-            out = ( (name,i), )
-        else:
-            out = ()
-        
-        if count > i and othernames:
-            for rest in getIngredients(othernames,count-i):
-                yield out + rest
-
-#print getScore((('Butterscotch', 0), ('Sprinkles', 50), ('Candy', 50)))
-
-
-best = None
-bestScore = 0
-for ingredients in getIngredients(vals.keys(),100):
-    cals = getCalories(ingredients)
-    if cals != 500:
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
         continue
 
-    score = getScore(ingredients)
-    if not best or score > bestScore:
-        best = ingredients
-        bestScore = score
+    # Process input line
 
-        print "Best: %s -> cals:%s score:%s" % (ingredients, cals, score, )
-        
+
+if args.p1:
+    print("Doing part 1")
+
+    
+if args.p2:
+    print("Doing part 2")

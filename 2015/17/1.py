@@ -1,49 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re, itertools
+import argparse, re
 
-lineRe = re.compile("(\d+)")
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-nums = []
+args = parser.parse_args()
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-    m = lineRe.match(line)
-    if not m:
-        print "Invalid line: %s" % (line,)
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
+
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
         continue
 
-    nums.append(int(line))
+    # Process input line
 
 
-print "Nums: %s" % (nums,)
+if args.p1:
+    print("Doing part 1")
 
-
-def findsubsets(nums,total):
-    for i in range(0,len(nums)):
-        size = nums[i]
-        if size < total:
-            for rest in findsubsets(nums[i+1:],total-size):
-                yield (size,) + rest
-        elif size == total:
-            yield (size,)
-
-mintotal = 0
-total = 0
-minnum = None
-for subset in findsubsets(nums,150):
-    num = len(subset)
-
-    if not minnum or num < minnum:
-        minnum = num
-        mintotal = 1
-    elif num == minnum:
-        mintotal = mintotal + 1
-        
-    #print "Subset: %s Size: %s" % (subset,sum(subset),)
-    total = total+1
-
-print "Total subsets: %s" % (total,)
-print "Smallest (%s) subsets: %s" % (minnum,mintotal,)
+    
+if args.p2:
+    print("Doing part 2")

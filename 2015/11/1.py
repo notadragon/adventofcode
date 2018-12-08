@@ -1,71 +1,82 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 
-import re
+import argparse, re
 
-minchar='a'
-maxchar='z'
+parser = argparse.ArgumentParser()
+parser.add_argument("input",type=str,nargs='?',default="input")
+parser.add_argument("--p1",dest="p1",action='store_true')
+parser.add_argument("--no-p1",dest="p1",action='store_false')
+parser.add_argument("--p2",dest="p2",action='store_true')
+parser.add_argument("--no-p2",dest="p2",action='store_false')
 
-badRe=re.compile(".*([iol]).*")
+args = parser.parse_args()
 
-goodReStr = ".*(" + "|".join( [ chr(c) + chr(c+1) + chr(c+2) for c in range(ord(minchar),ord(maxchar)-1) ] ) + ").*"
-goodRe=re.compile(goodReStr)
-print goodReStr
+if not args.p1 and not args.p2:
+    args.p1 = True
+    args.p2 = True
 
-goodRe2=re.compile(".*(.)\\1.*(.)\\2.*")
+print "Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2)
 
-def check(pw):
-    m = badRe.match(pw)
-    if not goodRe.match(pw):
-        return "Does not contain increasing triple."
+for x in open(args.input).readlines():
+    x = x.strip()
+    if not x:
+        continue
 
-    if m:
-        return "Contains %s" % (m.group(1),)
+    # Process input line
+    ival = x
 
-    if not goodRe2.match(pw):
-        return "Does not contain 2 pairs."
+print("Ival:%s" % (ival,))
+
+def increment(p):
+
+    numzs = 0
+    while numzs < len(p) and p[-1 - numzs] == "z":
+        numzs = numzs + 1
+    top = len(p) - numzs - 1
+
+    cchar = chr(ord(p[top])+1)
+    if cchar == "i" or cchar == "o" or cchar == "l":
+        cchar= chr(ord(cchar)+1)
     
-    return None
+    return p[0:top] + cchar + "a" * numzs
 
-def increment(old,ndx=-1):
-    ch=old[ndx]
-    if ch == maxchar:
-        if ndx + len(old) == 0:
-            return (minchar,) + old[1:] 
-        if ndx == -1:
-            out=old[:ndx] + minchar
-        else:
-            out=old[:ndx] + minchar + old[ndx+1:]
-        return increment(out,ndx-1)
-    else:
-        newch = chr(ord(ch)+1)
-        if ndx == -1:
-            return old[:ndx] + newch
-        else:
-            return old[:ndx] + newch + old[ndx+1:]
+re1 = re.compile(".*(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz).*")
+re3 = re.compile(".*(.)\\1.*(.)\\2.*")
 
-for line in open("input").readlines():
-    line = line.strip();
-    if not line: continue
+def isvalid(p):
+    if "i" in p or "o" in p or "l" in p:
+        return False
+    if not re1.match(p):
+        return False
+    if not re3.match(p):
+        return False
+    return True
 
-    pw=line
+x = ival
+while True:
+    x = increment(x)
+    if isvalid(x):
+        print("Next valid:%s" % (x,))
+        p1val = x
+        break
+    #print("Not Valid: %s" % (x,))
 
-    print "In: %s" % (pw,)
-    increments=1
-    found = 0
-    pw = increment(pw)
+x = p1val
+while True:
+    x = increment(x)
+    if isvalid(x):
+        print("Next valid:%s" % (x,))
+        p2val = x
+        break
+    
+if args.p1:
+    print("Doing part 1")
 
-    while True:
-        result = check(pw)
-        if result:
-            if increments % 1000 == 0:
-                print "Invalid (%i): %s (%s)" % (increments,pw,result,)
-        else:
-            found+=1
-            print "Valid #%i (%i): %s" % (found,increments,pw,)
+    print("P1Val:%s" % (p1val,))
 
-            if found > 5:
-                break
-            
-        pw = increment(pw)
-        increments+=1
 
+        
+if args.p2:
+    print("Doing part 2")
+
+    print("P2Val:%s" % (p2val,))

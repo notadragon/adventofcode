@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat input | sed -e "s/(/+\n/g" -e "s/)/-\n/g" | (
+cat input2 | sed -e "s/(/+\n/g" -e "s/)/-\n/g" | (
     J=0
     I=0
     while read line ; do
