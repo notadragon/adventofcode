@@ -39,14 +39,19 @@ powers = {}
 def retrieve(x,y,w):
     pw = powers.get(w,None)
     if pw:
-        return pw.get( (x,y), None)
+        return pw[x-1][y-1]
     else:
         return None
 
-def store(x,y,w,p):
-    pw = powers.setdefault(w,{})
-    pw[ (x,y) ] = p        
 
+def store(x,y,w,p):
+    pw = powers.setdefault(w,None)
+    if not pw:
+        pw = [None] * 300
+        for i in range(0,300):
+            pw[i] = [None] * 300
+        powers[w] = pw
+    pw[x-1][y-1] = p
     
 def power(x,y):
     p = retrieve(x,y,1)
