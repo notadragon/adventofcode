@@ -62,7 +62,7 @@ def power(x,y):
     p = rackId * y
     p += serialNum
     p = p * rackId
-    p = (p/100) % 10
+    p = int((p//100) % 10)
     p = p - 5
 
     store(x,y,1,p)
@@ -97,7 +97,10 @@ def printGrid(x,y,wx,wy):
     for yv in range(y,y+wy):
         line = []
         for xv in range(x,x+wx):
-            line.append("%4d" % (power(xv,yv),))
+            if yv < 1 or yv > 300 or xv < 1 or xv > 300:
+                line.append(" -- ")
+            else:
+                line.append("%4d" % (power(xv,yv),))
         lines.append("".join(line))
     return lines
 
@@ -134,8 +137,8 @@ if args.p2:
         if w > 4:
             del powers[w-3]
         #print("W:%s" % (w,))
-        for y in range(1,301 - w):
-            for x in range(1,301 - w):
+        for y in range(1,302 - w):
+            for x in range(1,302 - w):
                 p = gridpower(x,y,w,w)
                 if p == maxpower:
                     maxlocs.add( (x,y,w,) )
@@ -146,5 +149,7 @@ if args.p2:
                     maxpower = p
                     #print("Max update: %s = %s" % (maxloc,maxpower,))
     showGrid(maxloc[0]-1,maxloc[1]-1,maxloc[2]+2,maxloc[2]+2)
+    print("Max locs: %s" % (maxlocs,))
     print("Max Power: %s Max loc: %s,%s,%s" % (maxpower,maxloc[0],maxloc[1],maxloc[2]))
     
+print("234,287,13:%s" % (gridpower(234,287,13,13),))
