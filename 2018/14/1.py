@@ -29,11 +29,66 @@ for x in open(args.input).readlines():
         print("Invalid line: %s" % (x,))
         
     # Process input line
+    inval = int(x)
+
+print("Inval: %s" % (inval,))
+
+def step(state):
+    poses, scores = state
+
+    newrecipes = scores[poses[0]] + scores[poses[1]]
+    if newrecipes < 10:
+        scores.append( newrecipes )
+    else:
+        scores.append( newrecipes / 10 )
+        scores.append( newrecipes % 10 )
+
+    poses[0] = (poses[0] + scores[poses[0]] + 1) % (len(scores))
+    poses[1] = (poses[1] + scores[poses[1]] + 1) % (len(scores))
+        
+    return (poses, scores)
 
 
+def show(state):
+    poses, scores = state
+
+    toshow = list([" %d " % (s,) for s in scores])
+    toshow[poses[0]] = "(%d)" % (scores[poses[0]],)
+    toshow[poses[1]] = "[%d]" % (scores[poses[1]],)
+    
+    print("".join(toshow))
+
+
+    
 if args.p1:
     print("Doing part 1")
 
+    poses = [ 0, 1 ]
+    scores = [ 3, 7 ]
+
+    state = (poses,scores,)
+
+    while len(state[1]) < inval+10:
+        state = step(state)
+    nextvals = state[1][inval:inval+10]
+    print("Next10: %s" % ("".join([str(x) for x in nextvals]),))
     
 if args.p2:
     print("Doing part 2")
+
+    ivals = [ int(x) for x in str(inval) ]
+
+    poses = [ 0, 1 ]
+    scores = [ 3, 7 ]
+    state = (poses,scores,)
+    
+    while True:
+        if state[1][-len(ivals):] == ivals:
+            #show(state)
+            print("len(state): %s Before: %s" % (len(state[1]),len(state[1]) - len(ivals),))
+            break
+        elif state[1][-len(ivals)-1:-1] == ivals:
+            #show(state)
+            print("len(state): %s Before: %s" % (len(state[1]),len(state[1]) - len(ivals) - 1,))
+            break
+        state = step(state)
