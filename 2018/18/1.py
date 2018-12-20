@@ -9,6 +9,9 @@ parser.add_argument("--no-p1",dest="p1",action='store_false')
 parser.add_argument("--p2",dest="p2",action='store_true')
 parser.add_argument("--no-p2",dest="p2",action='store_false')
 parser.add_argument("--animate",dest="animate",action='store_true')
+parser.add_argument("--padx",dest="padx",type=int)
+parser.add_argument("--pady",dest="pady",type=int)
+
 
 args = parser.parse_args()
 
@@ -33,8 +36,8 @@ for x in open(args.input).readlines():
     # Process input line
     grid.append(tuple(x))
 
-padx = 100
-pady = 25
+padx = args.padx if args.padx else 0
+pady = args.pady if args.padx else 0
 padg = []
 for i in range(0,pady):
     padg.append( (".",) * ( 2 * padx  + len(grid[0]) ) )
@@ -171,4 +174,4 @@ if args.animate:
         show(g)
         print("  Score: %s" % (score(g),),flush=True)
         
-        time.sleep(1)
+        time.sleep(0.1)
