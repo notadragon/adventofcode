@@ -122,15 +122,15 @@ def applyop(instr, regs):
         print("UNKNOWN OP: %s" % (op,))
 
 
-def runinstrs(instrs,regs,end):
+def runinstrs(instrs,regs,end = -1):
     pos = 0
     executed = 0
-    while pos >= 0 and pos < len(instrs) and executed < end:
+    while pos >= 0 and pos < len(instrs) and (end < 0 or executed < end):
         instr = instrs[pos]
         regs[ip] = pos
         
         #print("Pos: %s op: %s registers: %s" % (pos,instr,regs,))
-
+        
         applyop(instr,regs)
         executed = executed + 1
         
@@ -148,23 +148,16 @@ if args.p1:
 
     minexecuted = 1000000
     
-    for r1 in range(0,100000000):
-        regs = [0] * 6
-        regs[0] = r1
-        executed,regs = runinstrs(instrs,regs,minexecuted,)
-
-        if executed < minexecuted:
-            minexecuted = executed
-        
-            print("Completed: r1=%s" % (r1,))
-            print("Executed; %s" % (executed,))
-            print("Final registers: %s" % (regs,))
-
-        elif r1 % 1000 == 0:
+    r1 = 5970144
     
-            print("Completed: r1=%s" % (r1,))
-            print("Executed; %s" % (executed,))
-            print("Final registers: %s" % (regs,))
+    regs = [0] * 6
+    regs[0] = r1
+    executed,regs = runinstrs(instrs,regs,-1,)
+
+    print("Completed: r1=%s" % (r1,))
+    print("Executed; %s" % (executed,))
+    print("Final registers: %s" % (regs,))
+
 
 if args.p2:
     print("Doing part 2")
