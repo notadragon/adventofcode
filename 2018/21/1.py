@@ -1,4 +1,4 @@
-#!/usr/bin/env pypy
+#!/usr/bin/env python3
 
 import argparse, re
 
@@ -122,42 +122,64 @@ def applyop(instr, regs):
         print("UNKNOWN OP: %s" % (op,))
 
 
-def runinstrs(instrs,regs,end = -1):
+def runinstrs(instrs,regs):
+    exitvals = [0,0]
+    allexitvals = set()
+    
     pos = 0
-    executed = 0
-    while pos >= 0 and pos < len(instrs) and (end < 0 or executed < end):
+    while pos >= 0 and pos < len(instrs):
         instr = instrs[pos]
         regs[ip] = pos
         
-        #print("Pos: %s op: %s registers: %s" % (pos,instr,regs,))
-        
-        applyop(instr,regs)
-        executed = executed + 1
-        
+        if pos == 14:
+            #print("Pos: %s op: %s registers: %s" % (pos,instr,regs,))
+
+            if regs[5] >= 256:
+                regs[2] = int(regs[5] / 256)
+                regs[3] = 1
+                regs[4] = 25
+            else:
+                regs[4] = 27
+                
+        else:
+            applyop(instr,regs)
+            
+        if pos == 28:
+            exitval = regs[1]
+
+            if not allexitvals:
+                exitvals[0] = exitval
+            if exitval in allexitvals:
+                break
+            allexitvals.add(exitval)
+            exitvals[1] = exitval
+
+            
+            #print("Exit Test: %s" % (regs,))
+            #print("Exit Vals: %s" % (len(allexitvals),))
+
         pos = regs[ip] + 1
         #print("  -> Pos; %s registers: %s" % (pos,regs,))
         
-    return executed,regs
+    return regs,exitvals
        
-if args.p1:
-    print("Doing part 1")
 
-
-    end = 10000
-
-
-    minexecuted = 1000000
+if True:
     
-    r1 = 5970144
+    r1 = 0
     
     regs = [0] * 6
     regs[0] = r1
-    executed,regs = runinstrs(instrs,regs,-1,)
+    regs,exitvals = runinstrs(instrs,regs)
 
     print("Completed: r1=%s" % (r1,))
-    print("Executed; %s" % (executed,))
     print("Final registers: %s" % (regs,))
+    print("ExitVals: %s" % (exitvals,))
 
+if args.p1:
+    print("Doing part 1")
+    print("Min exit val: %s" % (exitvals[0],))
 
 if args.p2:
     print("Doing part 2")
+    print("Max exit val: %s" % (exitvals[1],))

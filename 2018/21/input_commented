@@ -6,27 +6,32 @@
 4  seti 0 0 4        # goto 0
 
 5  seti 0 3 1        # A = 0
-6  bori 1 65536 5    # E = B | 65536      // 1 << 16
+6  bori 1 65536 5    # F = B | 65536      // 1 << 16
 7  seti 8586263 3 1  # B = 8586263        // '0b100000110000010000010111'
-8  bani 5 255 2      # C = E & 255        // low 7 bits of E
+8  bani 5 255 2      # C = F & 255        // low 7 bits of F
 9  addr 1 2 1        # B = B + C
 10 bani 1 16777215 1 # B = B & 16777215   // low 24 bits of B
 11 muli 1 65899 1    # B = B * 65899      // '0b10000000101101011'
 12 bani 1 16777215 1 # B = B & 16777215   // low 24 bits of B
-13 gtir 256 5 2      # C = 256 > E
-14 addr 2 4 4        # if 256 > E: skip next instruction
+13 gtir 256 5 2      # C = 256 > F
+
+// C = F / 256 ;  D = 1 ;  goto 26
+// goto 26
+14 addr 2 4 4        # if 256 > F: skip next instruction    
 15 addi 4 1 4        # skip next instruction
 16 seti 27 8 4       # goto 28
-17 seti 0 1 2        # C = 0
-18 addi 2 1 3        # D = B + 1
+17 seti 0 1 2        # C = 0      // for (C = 0; ; C++)
+
+18 addi 2 1 3        # D = C + 1  
 19 muli 3 256 3      # D = D * 256
-20 gtrr 3 5 3        # D = D > E
-21 addr 3 4 4        # if D > E: skip next instruction
+20 gtrr 3 5 3        # D = D > F
+21 addr 3 4 4        # if D > F: goto 26 (skip next -> goto 26)
 22 addi 4 1 4        # skip next instruction
-23 seti 25 8 4       # goto 26 
+23 seti 25 8 4       # goto 26    // end for D
 24 addi 2 1 2        # C = C + 1
-25 seti 17 7 4       # goto 18
-26 setr 2 0 5        # E = C
+25 seti 17 7 4       # goto 18    // end for C
+
+26 setr 2 0 5        # F = C      // 
 27 seti 7 8 4        # goto 8
 28 eqrr 1 0 2        # C = A == B
 29 addr 2 4 4        # if A == B: halt
