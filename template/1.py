@@ -1,6 +1,6 @@
 #!/usr/bin/env pypy
 
-import argparse, re
+import argparse, re, itertools, collections
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input",type=str,nargs='?',default="input")

@@ -58,9 +58,11 @@ def step(state):
     completed = True
 
     killedone = True
+    deadunits = set()
     
     for u in units:
-        if (u[0],u[1]) not in locations:
+        if (u[0],u[1]) in deadunits:
+            #print("Dead unit at: %s" % ((u[0],u[1],) , ))
             continue
         else:
             u = locations[ (u[0],u[1],) ]
@@ -78,7 +80,8 @@ def step(state):
             if sum([1 for other in locations.values() if other[2] == e]) == 0:
                 completed = False
                 break
-        
+            killedone = False
+            
         movedir = None
         while True:
             for p in distancelocs:
@@ -153,6 +156,8 @@ def step(state):
             tu[4] -= u[3]
             if tu[4] <= 0:
                 #KILL!
+                #print("Killed unit at: %s" % (attackloc,))
+                deadunits.add(attackloc)
                 killedone = True
                 del locations[attackloc]
                 grid[attackloc[0]][attackloc[1]] = "."
@@ -166,9 +171,13 @@ def outcome(s):
     completed = 0
     while s:
         nexts,numactions,rounddone = step(s)
+
         s = nexts
         if rounddone:
             completed = completed + 1
+
+            #print("After %s rounds:" % (completed,))
+            #show( s )
         else:
             break
     totalhp = sum([u[4] for u in s[1]])
@@ -204,7 +213,7 @@ if args.p1:
 if args.p2:
     print("Doing part 2")
 
-    elfattack = 1
+    elfattack = 4
     while True:
         g = []
 

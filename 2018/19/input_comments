@@ -1,5 +1,5 @@
 #ip 4
-addi 4 16 4
+0  addi 4 16 4
 seti 1 3 5 
 seti 1 1 3
 mulr 5 3 1
