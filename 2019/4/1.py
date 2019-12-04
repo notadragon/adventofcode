@@ -33,9 +33,65 @@ for x in open(args.input).readlines():
 
 print("Vals: %s" % (vals,))
 
+def valid(n):
+    ns = "%s" % (n,)
+    if len(ns) != 6:
+        return False
+
+    adjeq = False
+
+    for i in range(0,len(ns)-1):
+        if ns[i] > ns[i+1]:
+            return False
+
+    for a,b in zip(ns,ns[1:]):
+        if a == b:
+            adjeq = True
+
+    if not adjeq:
+        return False
+        
+    return True
+
 if args.p1:
     print("Doing part 1")
 
+    numvalid = 0
+    for n in range(vals[0],vals[1]+1):
+        if valid(n):
+            #print("Valid: %s" % (n,))
+
+            numvalid += 1
+
+    print("Number valid: %s" % (numvalid,))
     
+def valid2(n):
+    ns = "%s" % (n,)
+    if len(ns) != 6:
+        return False
+
+    adjeq = False
+
+    for i in range(0,len(ns)-1):
+        if ns[i] > ns[i+1]:
+            return False
+
+        if ns[i] == ns[i+1] and (i == 0 or ns[i] != ns[i-1]) and (i + 2 >= len(ns) or ns[i] != ns[i+2]):
+            adjeq = True
+
+    if not adjeq:
+        return False
+        
+    return True
+
 if args.p2:
     print("Doing part 2")
+    
+    numvalid = 0
+    for n in range(vals[0],vals[1]+1):
+        if valid2(n):
+            #print("Valid: %s" % (n,))
+
+            numvalid += 1
+
+    print("Number valid: %s" % (numvalid,))
