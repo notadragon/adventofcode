@@ -17,7 +17,7 @@ if not args.p1 and not args.p2:
 
 print("Input: %s P1: %s p2: %s" % (args.input,args.p1,args.p2))
 
-lineRe = re.compile(".*")
+lineRe = re.compile("(\d+)-(\d+)")
 
 for x in open(args.input).readlines():
     x = x.strip()
@@ -29,7 +29,9 @@ for x in open(args.input).readlines():
         print("Invalid line: %s" % (x,))
         
     # Process input line
+    vals = (int(m.group(1)), int(m.group(2)), )
 
+print("Vals: %s" % (vals,))
 
 if args.p1:
     print("Doing part 1")
