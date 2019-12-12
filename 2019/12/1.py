@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pypy
 
 import argparse, re, itertools, collections, math, functools
 
@@ -113,8 +113,13 @@ if args.p2:
         steps = steps + 1
         moons = advance(moons)
 
+    def gcd(a,b):
+        while b:
+            a,b = b, a%b
+        return a
+        
     def lcm(a,b):
-        return a*b // math.gcd(a,b)
+        return a*b // gcd(a,b)
 
     def lcm2(numbers):
         return functools.reduce(lcm, numbers)
