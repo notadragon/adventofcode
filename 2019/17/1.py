@@ -235,7 +235,59 @@ def genpath(grid):
         raise "Direct path does not work"
     
     return output
-    
+
+def findindices(full, prefix):
+    for i in range(0,len(full)):
+        if full[i:i+len(prefix)] == prefix:
+            yield i
+
+def zippath(path):
+    MAIN=[]
+    FUNCS=[ [], [], [], ]
+    FUNCNAMES="ABC "
+
+    for f in range(0,3):
+        funcstart = None
+        for i in range(0,len(path)):
+            if str(path[i]) in FUNCNAMES:
+                continue
+            funcstart = path[i:i+4]
+            break
+
+        if not funcstart:
+            break
+
+        indices = tuple(findindices(path,funcstart))
+        reduction = len(",".join([str(c) for c in funcstart])) * len(indices)
+
+        #print("Start %s Indices: %s Reduction: %s" % (funcstart, indices, reduction))
+        
+        while (len(path) >= indices[0] + len(funcstart) + 2) and path[indices[0] + len(funcstart) + 1] != " ":
+            testfuncstart = path[indices[0]:indices[0] + len(funcstart) + 2]
+            testindices = tuple(findindices(path,testfuncstart))
+            testreduction = len(",".join([str(c) for c in testfuncstart])) * len(testindices)
+            #print("Start %s Indices: %s Reduction: %s" % (testfuncstart, testindices, testreduction))
+            if not testindices:
+                break
+            if testreduction >= reduction:
+                indices = testindices
+                funcstart = testfuncstart
+                reduction = testreduction
+            else:
+                break
+
+        FUNCS[f] = ",".join([str(c) for c in funcstart])
+
+        for c in indices:
+            path[c] = FUNCNAMES[f]
+            for i in range(c+1,c+len(funcstart)):
+                path[i] = " "
+
+        #print("New Path: %s" % (path,))
+
+    MAIN = ",".join(list([ c for c in path if c != " " ]))
+
+    return [MAIN,] + FUNCS
     
 if args.p2:
     print("Doing part 2")
@@ -253,6 +305,10 @@ if args.p2:
 
     print("Path (%s): %s" % (len(",".join([str(c) for c in path])),",".join([str(c) for c in path]),))
 
+    MAIN,A,B,C = zippath(path)
+
+    print("zipped up: %s [ %s %s %s]" % (MAIN, A, B, C, ))
+    
     input = [ ord(c) for x in ( MAIN, "\n", A, "\n", B, "\n", C, "\n", CONTINUOUS, "\n", ) for c in x ]
 
     print("Input: %s" % (input,))
