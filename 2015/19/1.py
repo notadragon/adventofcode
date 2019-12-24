@@ -49,13 +49,21 @@ for k,r in replacements.items():
         reversereplacements[repl].append(k)
     
 
-def generateMolecules(r,m):
+def generateMolecules(r,m,maxm=-1):
     maxkey = max( [ len(k) for k in r.keys() ] )
     for i in range(0,len(m)):
         for j in range(i+1,min(len(m),i+maxkey)+1):
             if m[i:j] in r:
                 for repl in r[m[i:j]]:
                     yield m[0:i] + repl + m[j:]
+
+def generateMolecules2(r,m):
+    for key,vals in r.items():
+        ndx = m.find(key)
+        if ndx >= 0:
+            for repl in vals:
+                yield m[0:ndx] + repl + m[ndx+len(key):]
+                    
 if args.p1:
     print("Doing part 1")
 
@@ -86,24 +94,25 @@ if args.p2:
 
             print("Step: %s Molecules: %s" % (steps,len(molecules,)))
         print("Steps: %s" % (steps,))
-    elif False:
+
+    elif True:
         molecules = set([molecule])
         allmolecules = set([molecule])
         steps = 0
         while molecules and not "e" in molecules:
             nextmolecules = set()
             for m in molecules:
-                for g in generateMolecules(reversereplacements,m):
+                for g in generateMolecules2(reversereplacements,m):
                     if g in allmolecules:
                         continue
-                    allmolecules.add(g)
+                    #allmolecules.add(g)
                     nextmolecules.add(g)
             minsize = min(len(m) for m in nextmolecules)
             molecules = [ m for m in nextmolecules if len(m) == minsize ]
             steps = steps + 1
 
-            print("Step: %s All Molecules: %s minsize: %s Molecules: %s" % (steps,len(allmolecules),len(molecules,)))
+            print("Step: %s All Molecules: %s minsize: %s Molecules: %s" % (steps,len(allmolecules),minsize,len(molecules,)))
         print("Steps: %s" % (steps,))
-    else:
+
             
             
