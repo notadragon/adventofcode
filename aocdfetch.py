@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, re, itertools, collections, os, sys
+import argparse, re, itertools, collections, os, sys, shutil
 import aocd
 
 rootdir = "."
@@ -49,7 +49,7 @@ if args.day == 0:
     if days:
         day = max(days)
     else:
-        day = 0
+        day = 1
 else:
     day = args.day
 daydir = os.path.join(yeardir,str(day))
@@ -60,6 +60,13 @@ if not os.path.exists(daydir):
 if "session" not in configdata:
     print("Missing session in configdata")
     sys.exit(-1)
+
+templatefile = os.path.join(rootdir, "template", "year_day_1.py")
+scriptfile = os.path.join(daydir, "%s_%s_1.py" % (year, day,))
+
+if not os.path.exists(scriptfile):
+    print("Creating script file %s" % (scriptfile,))
+    shutil.copy2(templatefile, scriptfile)
     
 print("Fetching %s:%s" % (year, day,))
 
