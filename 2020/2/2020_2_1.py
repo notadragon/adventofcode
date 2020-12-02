@@ -32,18 +32,19 @@ for x in open(args.input).readlines():
     # Process input line
     data.append( (int(m.group(1)), int(m.group(2)), m.group(3), m.group(4)) )
 
+def countvalid(d,f):
+    return len([t for t in d if f(t)])
+
 if args.p1:
     print("Doing part 1")
 
-    valid = 0
-    for l,h,letter,pw in data:
-        count = 0
-        for c in pw:
-            if c == letter:
-                count = count + 1
-        if count >= l and count <= h:
-            print("%s-%s %s: %s" % (l,h,letter,pw,))
-            valid = valid + 1
+    def isvalid(t):
+        l,h,letter,pw =t
+        c = len([x for x in pw if x == letter])
+        return c >= l and c <= h
+    
+    
+    valid = countvalid(data,isvalid)
     print("Valid: %s" % (valid,))
             
     
@@ -51,10 +52,9 @@ if args.p1:
 if args.p2:
     print("Doing part 2")
 
-    valid = 0
-    for p1,p2,letter,pw in data:
-        count = 0
-        if (pw[p1-1] == letter) != (pw[p2-1] == letter):
-            print("%s-%s %s: %s" % (p1,p2,letter,pw,))
-            valid = valid + 1
+    def isvalid(t):
+        p1,p2,letter,pw =t
+        return (pw[p1-1] == letter) != (pw[p2-1] == letter)
+    
+    valid = countvalid(data,isvalid)
     print("Valid: %s" % (valid,))
