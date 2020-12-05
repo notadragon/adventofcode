@@ -76,16 +76,19 @@ if args.p1:
             #print("Valid: %s" % (ppd,))
     print("Total Valid: %s" % (valid,))
 
+numRe = re.compile("[0-9]+")
+hgtRe = re.compile("([0-9]+)cm|([0-9]+)in")
+hclRe = re.compile("#[0-9a-f]{6}")
+
 if args.p2:
     print("Doing part 2")
 
     def isvalid(ppd):
-        v = True
+        v = False
         for f in expectedfields:
             if f != "cid" and not f in ppd:
                 return False
 
-        numRe = re.compile("[0-9]+")
         byr = ppd["byr"]
         if len(byr) != 4 or not numRe.match(byr):
             if v: print("Bad BYR: %s" % (byr,))
@@ -112,7 +115,6 @@ if args.p2:
             return False
 
         hgt = ppd["hgt"]
-        hgtRe = re.compile("([0-9]+)cm|([0-9]+)in")
         m = hgtRe.match(hgt)
         if not m:
             if v: print("Bad hgt: %s" % (hgt,))
@@ -129,7 +131,6 @@ if args.p2:
                 return False
 
         hcl = ppd["hcl"]
-        hclRe = re.compile("#[0-9a-f]{6}")
         m = hclRe.match(hcl)
         if not m:
             if v: print("Bad hcl: %s" % (hcl,))
@@ -151,5 +152,5 @@ if args.p2:
     for ppd in getpassportsd(data):
         if isvalid(ppd):
             valid = valid + 1
-        print("InValid: %s" % (ppd,))
+        #print("InValid: %s" % (ppd,))
     print("Total Valid: %s" % (valid,))
