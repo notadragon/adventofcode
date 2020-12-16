@@ -36,29 +36,28 @@ print("Data: %s" % (data,))
 def numbers(data):
 
     indices = {}
-    diffs = {}
     
     for i in range(0,len(data)):
         last = data[i]
         if last in indices:
-            diffs[last] = i - indices[last]
+            nextVal = i - indices[last]
+        else:
+            nextVal = 0
         indices[last] = i
         yield last
 
     pos = len(data)
     while True:
-        if last in diffs:
-            next = diffs[last]
-        else:
-            next = 0
-
-        last = next
+        last = nextVal
+        yield last
+        
         if last in indices:
-            diffs[last] = pos - indices[last]
+            nextVal = pos - indices[last]
+        else:
+            nextVal = 0
         indices[last] = pos
 
         pos = pos + 1
-        yield last
 
 
 if args.p1:
