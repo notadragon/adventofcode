@@ -33,110 +33,90 @@ for x in open(args.input).readlines():
 
 print("Labeling: %s" % (labeling,))
 
-def move(cups,cupmax):
-    pickup = cups[1:4]
-    del cups[1:4]
+def dostep(current,nextmap,valrange):
+    """
+    Perform one step, with the current cup being 'current', nextmap 
+    containing the ccup id right of each cup, and valrange having 
+    the [min,max] cup values
+    """
+    pickup = []
+    for i in range(0,3):
+        if pickup:
+            pickup.append(nextmap[pickup[-1]])
+        else:
+            pickup.append(nextmap[current])
 
-    destination = cups[0] - 1
-    if destination < 1:
-        destination = cupmax
-        
-    while destination in pickup:
+    destination = current - 1
+    if destination < valrange[0]:
+        destination = valrange[1]
+    while destination in pickup or destination not in nextmap:
         destination = destination - 1
-        if destination < 1:
-            destination = cupmax
+        if destination < valrange[0]:
+            destination = valrange[1]
 
-    destndx = cups.index(destination)
+    nextmap[current] = nextmap[pickup[-1]]
+    nextmap[pickup[-1]] = nextmap[destination]
+    nextmap[destination] = pickup[0]
 
-    cups = cups[1:destndx+1] + pickup + cups[destndx+1:] + [cups[0]]
+def solve(startorder,maxsize,steps):
+    """
+    Given an initial sequence ofc cups 'startorder', and total number of
+    cups 'maxsize', perform 'steps' steps.  Return the new set of cups as
+    an array    
+    """
+    
+    nextmap = {}
+    maxval = max(startorder)
+    minval = min(startorder)
 
-    return cups
+    # fill in the initial set of links
+    for i in range(0,len(startorder)-1):
+        nextmap[startorder[i]] = startorder[i+1]
 
+    # fill in extra values after the initial list
+    lastval = startorder[-1]
+    nextval = maxval + 1
+    while len(nextmap) < maxsize - 1:
+        maxval = max(maxval,lastval)
+        nextmap[lastval] = nextval
+        lastval = nextval
+        nextval = nextval + 1
+
+    #link the last element back to the first element
+    nextmap[lastval] = startorder[0]
+    maxval = max(maxval,lastval)
+
+    # iterate the right number of steps
+    current = startorder[0]
+    for i in range(0,steps):
+        dostep(current,nextmap,(minval,maxval))
+        current = nextmap[current]
+
+    # build and return the final list of cups starting at cup #1
+    output = [0] * len(nextmap)
+    nextval = 1
+    for i in range(0,len(output)):
+        output[i] = nextval
+        nextval = nextmap[nextval]
+
+    return output
+    
+    
 if args.p1:
     print("Doing part 1")
 
-    cups = list([ int(l) for l in labeling])
-    cupmax = max(cups)
-    for i in range(0,100):
-        cups = move(cups,cupmax)
+    cups = [ int(l) for l in labeling]
+    lastcups = solve(cups, len(cups), 100)
 
-    onendx = cups.index(1)
-    if onendx != len(cups)-1:
-        cups = cups[onendx+1:] + cups[0:onendx+1]
+    print("Final order 1 + %s" % ("".join([str(c) for c in lastcups[1:]]),))
 
-    print("Final order 1 + %s" % ("".join([str(c) for c in cups[:-1]]),))
-
-class Node:
-    def __init__(self,val):
-        self.val = val
-        self.r = None
-
-    def show(self,count = 10):
-        x = self
-        out = []
-        for i in range(0,count):
-            out.append(str(x.val))
-            x = x.n
-            if not x:
-                break
-        print("%s ... " % (", ".join(out),))
-
-    def find(self,v):
-        x = self
-        while x.val != v:
-            x = x.n
-        return x
-
-def move2(current, allcups, cupmax):
-    pickup = current.n
-    current.n = current.n.n.n.n
-    pickup.n.n.n = None
-
-    pickupvals = [ pickup.val, pickup.n.val, pickup.n.n.val, ]
-
-    destination = current.val - 1
-    if destination < 1:
-        destination = cupmax
-        
-    while destination in pickupvals:
-        destination = destination - 1
-        if destination < 1:
-            destination = cupmax
-
-    destnode = allcups[destination]
-
-    rest = destnode.n
-    destnode.n = pickup
-    pickup.n.n.n = rest
-
-    current = current.n
-    return current
         
 if args.p2:
     print("Doing part 2")
 
-    extracups = 1000000 - len(labeling)
-    highest = max([int(i) for i in labeling])
-    cupmax = highest + extracups 
+    cups = [ int(l) for l in labeling]
+    lastcups = solve(cups, 1000000, 10000000)
 
-    cups = [ Node(int(i)) for i in labeling ] + [ Node(i) for i in range(highest+1,highest+1+extracups) ]
-    for i in range(0,len(cups)-1):
-        cups[i].n = cups[i+1]
-    cups[-1].n = cups[0]
-
-    allcups = [ None ] * 1000001
-    for c in cups:
-        allcups[c.val] = c
-
-    current = cups[0]
-
-    current.show()
-
-    for i in range(0,10000000):
-        current = move2(current,allcups,cupmax)
-
-    allcups[1].show()
-
-    nv = allcups[1].n.val
-    nnv = allcups[1].n.n.val
-    print("Product: %s * %s = %s" % ( nv, nnv, nv * nnv,))
+    print("Final order %s ... %s" % (", ".join([str(c) for c in lastcups[0:20]]),
+                                         ", ".join([str(c) for c in lastcups[-20:]]),))
+    print("Product: %s * %s = %s" % (lastcups[1],lastcups[2],lastcups[1]*lastcups[2],))
