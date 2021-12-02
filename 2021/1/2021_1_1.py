@@ -58,3 +58,10 @@ if args.p2:
             incr = incr + 1
 
     print("Increases: %s" % (incr,))
+
+    incr = 0
+    for x,y in zip(data[:-3],data[3:]):
+        if y > x:
+            incr = incr + 1
+
+    print("Increases: %s" % (incr,))
