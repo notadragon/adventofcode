@@ -68,7 +68,8 @@ def minRisk(getter, startloc, endloc):
             found.add(a)
             
             acost = path[0] + getter(a)
-            paths.put( (acost,) + path[1:] + (a,) )
+            #paths.put( (acost,) + path[1:] + (a,) )
+            paths.put( (acost,a,) )
 
     
 if args.p1:
@@ -80,7 +81,8 @@ if args.p1:
     path = minRisk(getter, (0,0), (len(data[-1])-1, len(data)-1))
 
     print(f"Optimal Path: {path}")
-
+    print(f"Minimal Risk: {path[0]}")
+    
 def gget2(data, loc):
     y = loc[1] % len(data)
     x = loc[0] % len(data[y])
@@ -107,3 +109,4 @@ if args.p2:
     path = minRisk(getter, (0,0), (5*len(data[-1])-1, 5*len(data)-1))
 
     print(f"Optimal Path: {path}")
+    print(f"Minimal Risk: {path[0]}")
