@@ -71,11 +71,6 @@ def showchar(ival):
         return "#"
             
 def stepImage(imagem, enhance):
-    minx = min( k[0] for k in imagem[1].keys() )
-    maxx = max( k[0] for k in imagem[1].keys() )
-    miny = min( k[1] for k in imagem[1].keys() )
-    maxy = max( k[1] for k in imagem[1].keys() )
-
     newimage = {}
 
     olddefault = imagem[0]
@@ -83,14 +78,17 @@ def stepImage(imagem, enhance):
         defaultenval = parse(enhance[0])
     else:
         defaultenval = parse(enhance[ 511 ])
-    
-    for y in range(miny-10, maxy+10):
-        for x in range(minx-10, maxx+10):
-            val = consider(imagem, (x,y))
-            enval = parse(enhance[val])
-            if enval != defaultenval:
-                newimage[(x,y)] = enval
-            #print(f"({x},{y}) -> {val} = {enhance[val]}")
+
+    tocheck = set()
+    for loc in imagem[1].keys():
+        for delta in ( (-1,-1), (0,-1), (1,-1), (-1,0), (0,0), (1,0), (-1,1), (0,1), (1,1), ):
+            tocheck.add( (loc[0] + delta[0], loc[1] + delta[1],) )
+    for loc in tocheck:
+        val = consider(imagem, loc)
+        enval = parse(enhance[val])
+        if enval != defaultenval:
+            newimage[loc] = enval
+        #print(f"({x},{y}) -> {val} = {enhance[val]}")
 
     return ( defaultenval, newimage )
 
