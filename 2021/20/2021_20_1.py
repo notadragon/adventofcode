@@ -36,15 +36,13 @@ enhancement = data[0]
 inimage = data[1:]
 
 
-def consider(image, loc):
-    val = []
+def consider(imagem, loc):
+    val = 0
     for delta in ( (-1,-1), (0,-1), (1,-1), (-1,0), (0,0), (1,0), (-1,1), (0,1), (1,1), ):
         dloc = ( loc[0] + delta[0],  loc[1] + delta[1] )
-        if dloc in image:
-            val.append(str(image[dloc]))
-        else:
-            val.append(str(image["default"]))
-    return int("".join(val),2)
+        dval = getval(imagem, dloc)
+        val = val * 2 + dval
+    return val
 
 def imagemap(image):
     output = {}
@@ -52,30 +50,39 @@ def imagemap(image):
         for x in range(0,len(image[y])):
             if image[y][x] == "#":
                 output[ (x,y) ] = 1
-    output[ "default" ] = 0
-    return output
+    return ( 0, output )
+
+def getval(imagem, loc):
+    if loc in imagem[1]:
+        return 1 - imagem[0]
+    else:
+        return imagem[0]
 
 def parse(ichar):
     if ichar == "#":
         return 1
     else:
         return 0
+
+def showchar(ival):
+    if ival == 0:
+        return "."
+    else:
+        return "#"
             
 def stepImage(imagem, enhance):
-    minx = min( k[0] for k in imagem.keys() if k != "default")
-    maxx = max( k[0] for k in imagem.keys() if k != "default")
-    miny = min( k[1] for k in imagem.keys() if k != "default")
-    maxy = max( k[1] for k in imagem.keys() if k != "default")
+    minx = min( k[0] for k in imagem[1].keys() )
+    maxx = max( k[0] for k in imagem[1].keys() )
+    miny = min( k[1] for k in imagem[1].keys() )
+    maxy = max( k[1] for k in imagem[1].keys() )
 
     newimage = {}
 
-    olddefault = imagem["default"]
+    olddefault = imagem[0]
     if olddefault == 0:
         defaultenval = parse(enhance[0])
     else:
         defaultenval = parse(enhance[ 511 ])
-    newimage["default"] = defaultenval
-
     
     for y in range(miny-10, maxy+10):
         for x in range(minx-10, maxx+10):
@@ -85,31 +92,32 @@ def stepImage(imagem, enhance):
                 newimage[(x,y)] = enval
             #print(f"({x},{y}) -> {val} = {enhance[val]}")
 
-    return newimage
+    return ( defaultenval, newimage )
 
 def show(imagem):
-    minx = min( k[0] for k in imagem.keys() if k != "default")
-    maxx = max( k[0] for k in imagem.keys() if k != "default")
-    miny = min( k[1] for k in imagem.keys() if k != "default")
-    maxy = max( k[1] for k in imagem.keys() if k != "default")
+    minx = min( k[0] for k in imagem[1].keys() )
+    maxx = max( k[0] for k in imagem[1].keys() )
+    miny = min( k[1] for k in imagem[1].keys() )
+    maxy = max( k[1] for k in imagem[1].keys() )
 
     for y in range(miny,maxy+1):
         row = []
         for x in range(minx,maxx+1):
-            if (x,y) in imagem:
-                row.append("#")
-            else:
-                row.append(".")
+            v = getval( imagem, (x,y) )
+            row.append(showchar(v))
         print("".join(row))
 
 if args.p1:
     print("Doing part 1")
 
     im = imagemap(inimage)
+    show(im)
     im2 = stepImage(im, enhancement)
+    show(im2)
     im3 = stepImage(im2, enhancement)
+    show(im3)
 
-    print(f"After 2 steps: {len(im3)-1}")
+    print(f"After 2 steps: {len(im3[1])}")
     
     
 if args.p2:
@@ -118,4 +126,4 @@ if args.p2:
     im = imagemap(inimage)
     for i in range(0,50):
         im = stepImage(im, enhancement)
-    print(f"After 50 steps: {len(im)-1}")
+    print(f"After 50 steps: {len(im[1])}")
