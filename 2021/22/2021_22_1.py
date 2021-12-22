@@ -81,6 +81,9 @@ def oncells(seq):
 
         cb1 = (cb1[0], cb1[1], inside)
         # cb1 is now intesrsection
+
+    def cbsize(cb):
+        return (cb[0][1]-cb[0][0]+1) * (cb[1][1]-cb[1][0]+1) * (cb[2][1]-cb[2][0]+1)
         
     for d in seq:
         #print(f"{d}")
@@ -88,11 +91,11 @@ def oncells(seq):
         newcuboids = set()
 
         changecb = d[1:]
-        
+
         for cb in oncuboids:
             for newcb in nonintersect(cb,changecb):
                 newcuboids.add(newcb)
-
+            
         if d[0]:
             newcuboids.add(changecb)
 
