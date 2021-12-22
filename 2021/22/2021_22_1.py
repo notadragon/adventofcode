@@ -36,11 +36,30 @@ for x in open(args.input).readlines():
 #    print(f"{d}")
 
 def oncells(seq):
-    oncuboids = set()
+    oncuboids = []
 
+    def isinside(cb1, cb2):
+        for dim in range(0,3):
+            if not (cb1[dim][0] >= cb2[dim][0] and cb1[dim][1] <= cb2[dim][1]):
+                return False
+        return True
+    
+    def isoverlap(cb1,cb2):
+        for dim in range(0,3):
+            insiderange = ( max( cb1[dim][0], cb2[dim][0] ), min(cb1[dim][1], cb2[dim][1]), )
+            #print(f"{cb1[dim]} i {cb2[dim]} -> {insiderange}")
+            if insiderange[0] <= insiderange[1]:
+                return True
+        return False
+        
+    
     def nonintersect(cb1, cb2):
         # sequence of cuboids that make up cb1 but do not intersect cb2
 
+        if not isoverlap(cb1,cb2):
+            #print(f"No overlap: {cb1} != {cb2}")
+            yield cb1
+            return
 
         below = (cb1[0][0], min(cb1[0][1],cb2[0][0]-1))
         if below[0] <= below[1]:
@@ -84,20 +103,31 @@ def oncells(seq):
 
     def cbsize(cb):
         return (cb[0][1]-cb[0][0]+1) * (cb[1][1]-cb[1][0]+1) * (cb[2][1]-cb[2][0]+1)
-        
+
     for d in seq:
         #print(f"{d}")
 
-        newcuboids = set()
+        newcuboids = []
 
         changecb = d[1:]
 
-        for cb in oncuboids:
-            for newcb in nonintersect(cb,changecb):
-                newcuboids.add(newcb)
-            
         if d[0]:
-            newcuboids.add(changecb)
+            contained = False
+            for cb in oncuboids:
+                if isinside(changecb, cb):
+                    # surprisingly, with my input this never happens, so this optimization is actually pointless.
+                    contained = True
+                    continue
+                
+                for newcb in nonintersect(cb,changecb):
+                    newcuboids.append(newcb)
+            if not contained:
+                newcuboids.append(changecb)
+        else:
+            for cb in oncuboids:
+                for newcb in nonintersect(cb,changecb):
+                    newcuboids.append(newcb)
+            
 
         oncuboids = newcuboids
 
