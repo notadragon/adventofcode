@@ -36,6 +36,46 @@ for x in open(args.input).readlines():
 #    print(f"{d}")
 
 def oncells(seq):
+
+    counts = {}
+
+    def cbsize(cb):
+        return (cb[0][1]-cb[0][0]+1) * (cb[1][1]-cb[1][0]+1) * (cb[2][1]-cb[2][0]+1)
+
+    def cbintersect(cb1, cb2):
+        output = ( ( max( cb1[0][0], cb2[0][0] ), min(cb1[0][1], cb2[0][1]), ),
+                   ( max( cb1[1][0], cb2[1][0] ), min(cb1[1][1], cb2[1][1]), ),
+                   ( max( cb1[2][0], cb2[2][0] ), min(cb1[2][1], cb2[2][1]), ) )
+        if output[0][0] > output[0][1] or output[1][0] > output[1][1] or output[2][0] > output[2][1]:
+            return None
+        else:
+            return output;
+    
+    for d in seq:
+        changedcb = d[1:]
+
+        ccounts = {}
+
+        for cb, count in counts.items():
+            isect = cbintersect(cb, changedcb)
+
+            if isect:
+                ccounts[isect] = ccounts.get(isect,0) + -count
+
+        if d[0]:
+            ccounts[changedcb] = ccounts.get(changedcb,0) + 1
+
+        for cb,count in ccounts.items():
+            counts[cb] = counts.get(cb,0) + count
+
+    size = 0
+    for cb,count in counts.items():
+        #print(f"on: {cb}")
+        size = size + count * cbsize(cb)
+        
+    return size
+            
+def oncells2(seq):
     oncuboids = []
 
     def isinside(cb1, cb2):
@@ -136,7 +176,7 @@ def oncells(seq):
     size = 0
     for cb in oncuboids:
         #print(f"on: {cb}")
-        size = size + (cb[0][1]-cb[0][0]+1) * (cb[1][1]-cb[1][0]+1) * (cb[2][1]-cb[2][0]+1)
+        size = size + cbsize(cb)
         
     return size
 
