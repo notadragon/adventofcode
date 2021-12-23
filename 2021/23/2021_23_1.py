@@ -33,310 +33,263 @@ for x in open(args.input).readlines():
     # Process input line
     data.append(x)
 
-def findPath(initstate, finalstate):
-    movecosts = {
-        "A" : 1,
-        "B" : 10,
-        "C" : 100,
-        "D" : 1000,
-    }
+movecosts = {
+    "A" : 1,
+    "B" : 10,
+    "C" : 100,
+    "D" : 1000,
+}
 
-    roomids = {
-        "A" : 0,
-        "B" : 1,
-        "C" : 2,
-        "D" : 3,
-    }
-
-    # 8 9    10   11   12    13 14
-    #      0    1    2    3
-    #      4    5    6    7
-
-    numspaces = 15
-
-    def initdarray():
-        output = [ [0] * numspaces for x in range(0,numspaces) ]
-        
-        for room in ( (8,9), (13,14), (0,4), (1,5), (2,6), (3,7),  ):
-            output[room[0]][room[1]] = 1
-            output[room[1]][room[0]] = 1
-
-        for hall in ( (9,0), (9,10),
-                      (10,0), (10,1), (10,11),
-                      (11,1), (11,2), (11,12),
-                      (12,2), (12,3), (12,13),
-                      (13,3), ):
-            output[hall[0]][hall[1]] = 2
-            output[hall[1]][hall[0]] = 2
-
-        return output
-        
-    darray = initdarray()
+roomids = {
+    "A" : 0,
+    "B" : 1,
+    "C" : 2,
+    "D" : 3,
+}
 
 
-    def show(state):
-        print("#############")
-        print(f"#{state[8]}{state[9]}.{state[10]}.{state[11]}.{state[12]}.{state[13]}{state[14]}#")
-        print(f"###{state[0]}#{state[1]}#{state[2]}#{state[3]}###")
-        print(f"  #{state[4]}#{state[5]}#{state[6]}#{state[7]}#")
-        print("  #########")
-
-    costs = { }
-
-    tosearch = queue.PriorityQueue()
-    tosearch.put( (0,initstate) )
-
-    showcost = 0
-    
-    while not tosearch.empty() and not finalstate in costs:
-        npath = tosearch.get()
-
-        cost = npath[0]
-        lastpos = npath[-1]
-        
-        if lastpos in costs:
-            continue
-        costs[lastpos] = cost
-
-        if lastpos == finalstate:
-            return npath
-
-        if cost >= showcost + 100:
-            print(f"COST: {cost}")
-            showcost = cost
-            show(lastpos)
-
-        for i in range(0,len(lastpos)):
-            if lastpos[i] != ".":
-                continue
-
-            for j in range(0,len(lastpos)):
-                if i == j:
-                    continue
-                
-                movesteps = darray[i][j] 
-                if movesteps == 0:
-                    continue
-
-                moving = lastpos[j]
-                if moving == ".":
-                    continue
-
-                targetroom = roomids[moving]
-                if j == targetroom + 4:
-                    # in back of target room, stay.
-                    continue
-                
-                if j == targetroom and lastpos[j+4] == moving:
-                    # target room is full and good, stay.
-                    continue
-                    
-                if i < 4:
-                    if i != targetroom:
-                        if j != i+4:
-                            # never enter wrong room
-                            continue
-                    else:
-                        if j == i+4:
-                            # don't back out of target room
-                            continue
-                        # only enter target room if back of target room is empty or correct
-                        if lastpos[i+4] != moving and lastpos[i+4] != '.':
-                            continue
-                elif i < 8:
-                    if i != targetroom + 4:
-                        # never go backwards into wrong room
-                        continue
-                
-
-                newpos = list(lastpos)
-                newpos[i] = moving
-                newpos[j] = "."
-                newcost = cost + movesteps * movecosts[moving]
-
-                newpos = tuple(newpos)
-
-                if not newpos in costs:
-                    tosearch.put( (newcost, newpos) )
-        
-
-def findPath2(initstate, finalstate):
-    movecosts = {
-        "A" : 1,
-        "B" : 10,
-        "C" : 100,
-        "D" : 1000,
-    }
-
-    roomids = {
-        "A" : 0,
-        "B" : 1,
-        "C" : 2,
-        "D" : 3,
-    }
-
-    # 16 17  18   19   20   21 22
-    #      0    1    2    3
-    #      4    5    6    7
-    #      8    9   10   11
-    #     12   13   14   15
-
-    numspaces = 23
-
-    def initdarray():
-        output = [ [0] * numspaces for x in range(0,numspaces) ]
-        
-        for room in ( (16,17), (21,22), (0,4,8,12), (1,5,9,13), (2,6,10,14), (3,7,11,15),  ):
-            for n in range(0,len(room)-1):
-                output[room[n]][room[n+1]] = 1
-                output[room[n+1]][room[n]] = 1
-
-        for hall in ( (17,0), (17,18),
-                      (18,0), (18,1), (18,19),
-                      (19,1), (19,2), (19,20),
-                      (20,2), (20,3), (20,21),
-                      (21,3), ):
-            output[hall[0]][hall[1]] = 2
-            output[hall[1]][hall[0]] = 2
-
-        return output
-        
-    darray = initdarray()
-
-
-    def show(state):
-        print("#############")
-        print(f"#{state[16]}{state[17]}.{state[18]}.{state[19]}.{state[20]}.{state[21]}{state[22]}#")
-        print(f"###{state[0]}#{state[1]}#{state[2]}#{state[3]}###")
-        print(f"  #{state[4]}#{state[5]}#{state[6]}#{state[7]}#")
-        print(f"  #{state[8]}#{state[9]}#{state[10]}#{state[11]}#")
-        print(f"  #{state[12]}#{state[13]}#{state[14]}#{state[15]}#")
-        print("  #########")
-
-
-    def behind(state, roompos):
-        roompos = roompos + 4
-        while roompos < 16:
-            yield state[roompos]
-            roompos = roompos + 4
-
-    def inroom(state, roomid):
-        for c in behind(state,roomid-4):
-            yield c
-        
-    costs = { }
-
-    tosearch = queue.PriorityQueue()
-    tosearch.put( (0,initstate) )
-
-    showcost = 0
-    
-    while not tosearch.empty() and not finalstate in costs:
-        npath = tosearch.get()
-
-        cost = npath[0]
-        lastpos = npath[-1]
-        
-        if lastpos in costs:
-            continue
-        costs[lastpos] = cost
-
-        if lastpos == finalstate:
-            return npath
-
-        if cost >= showcost + 100:
-            print(f"COST: {cost}")
-            showcost = cost
-            show(lastpos)
-
-        for i in range(0,len(lastpos)):
-            if lastpos[i] != ".":
-                continue
-
-            for j in range(0,len(lastpos)):
-                if i == j:
-                    continue
-                
-                movesteps = darray[i][j] 
-                if movesteps == 0:
-                    continue
-
-                moving = lastpos[j]
-                if moving == ".":
-                    continue
-
-                targetroom = roomids[moving]
-                if j == targetroom + 12:
-                    # in back of target room, stay.
-                    continue
-
-                if j == targetroom + 8 and lastpos[j+4] == moving:
-                    continue
-
-                if j == targetroom + 4 and lastpos[j+4] == moving and lastpos[j+8] == moving:
-                    continue
-                
-                if j == targetroom and lastpos[j+4] == moving and lastpos[j+8] == moving and lastpos[j+12] == moving:
-                    # target room is full and good, stay.
-                    continue
-
-                if i < 16:
-                    iroom = i % 4
-
-                    if iroom != targetroom:
-                        # only back out of other rooms
-                        if j >= 16 or j < i:
-                            continue
-                    elif j >= 16:
-                        badcontents = ( c for c in inroom(lastpos,iroom) if c != moving and c != '.' )
-
-                        if badcontents:
-                            continue
-                    elif j > i:
-                        # check if able to move out of right room (bad thing behind us)
-                        
-                        badcontents = (c for c in behind(lastpos,j) if c != moving and c != '.' )
-
-                        if not badcontents:
-                            continue
-                    else:
-                        # check if we can go deeper into the room (no bad thing behind us)
-
-                        badcontents = (c for c in behind(lastpos,j) if c != moving and c != '.' )
-
-                        if badcontents:
-                            continue
-
-                newpos = list(lastpos)
-                newpos[i] = moving
-                newpos[j] = "."
-                newcost = cost + movesteps * movecosts[moving]
-
-                newpos = tuple(newpos)
-
-                if not newpos in costs:
-                    tosearch.put( (newcost, newpos) )
-        
-
-                    
-if args.p1:
-    print("Doing part 1")
-
-    initstate = []
+def parseState(data):
+    rooms = [ [], [], [], [], ["."] * 7, ]
+    ndx = 0
     for d in data:
         for c in d:
             if c in "ABCD":
-                initstate.append(c)
-    for i in range(0,7):
-        initstate.append(".")
-    initstate = tuple(initstate)
+                rooms[ndx % 4].append(c)
+                ndx = ndx + 1
 
-    print(f"{initstate}")
+    return tuple( tuple(r) for r in rooms )
 
+def amphicount(state):
+    output = 0
+    for r in state:
+        for c in r:
+            if c in "ABCD":
+                output = output + 1
+    return output
 
-    finalstate = ( 'A', 'B', 'C', 'D', 'A', 'B', 'C', 'D', '.', '.', '.', '.', '.', '.', '.', )
+sids = {}
+nextsid = 1
+def show(state):
+    
+    if state in sids:
+        sid = sids[state]
+    else:
+        global nextsid
+        sid = nextsid
+        sids[state] = sid
+        nextsid = nextsid + 1
+        
+    print(f"-------{sid}--------")
+    
+    print("#############")
+    print(f"#{state[-1][0]}{state[-1][1]}.{state[-1][2]}.{state[-1][3]}.{state[-1][4]}.{state[-1][5]}{state[-1][6]}#")
 
-    path = findPath(initstate, finalstate)
+    roomsize = amphicount(state) // 4
+    for i in range(0,roomsize):
+        row = []
+        for r in range(0,4):
+            rc = len(state[r])
+            n  = i - (roomsize - rc)
+            c = state[r][n] if n >= 0 else "."
+            row.append(c)
+        if i == 0:
+            w = "##"
+        else:
+            w = "  "
+        print(f"{w}#{row[0]}#{row[1]}#{row[2]}#{row[3]}#{w}")
+
+    print("  #########")
+
+def findPath(initstate):
+    amphipodcount = amphicount(initstate)
+    roomsize = amphipodcount // 4
+    finalstate = ( ('A',) * roomsize, ('B',) * roomsize, ('C',) * roomsize, ('D',) * roomsize, ('.',) * 7, )
+
+    costs = {}
+
+    tosearch = queue.PriorityQueue()
+    tosearch.put( (0, initstate) )
+
+    def iscleanroom(r,c):
+        for rc in r:
+            if rc != c:
+                #print(f"Dirty room! {r} {c}")
+                return False
+        #print(f"Clean room! {r} {c}")
+        return True
+
+    def clearpathlength(hallway, htarget, roomid):
+        hallindex = roomid + 1
+        if htarget <= hallindex:
+            plen = 0
+            for i in range(hallindex,htarget-1,-1):
+                if hallway[i] != ".":
+                    return None
+                if i == 0 or i == 6:
+                    plen = plen + 1
+                else:
+                    plen = plen + 2
+            return plen
+        else:
+            plen = 0
+            for i in range(hallindex+1,htarget+1):
+                if hallway[i] != ".":
+                    return None
+                if i == 0 or i == 6:
+                    plen = plen + 1
+                else:
+                    plen = plen + 2
+            return plen
+
+    def clearpathinlength(hallway, htarget, roomid):
+        hallindex = roomid + 1
+        plen = 1 if (htarget == 0 or htarget == 6) else 2
+        if htarget <= hallindex:
+            for i in range(htarget+1,hallindex+1):
+                if hallway[i] != ".":
+                    return None
+                plen = plen + 2
+        else:
+            for i in range(htarget-1,hallindex,-1):
+                if hallway[i] != ".":
+                    return None
+                plen = plen + 2
+        return plen
+
+    def clearroomlength(hallway, rfrom, rto):
+        r1 = min(rfrom, rto)
+        r2 = max(rfrom, rto)
+
+        for i in range(2 + r1, 2 + r2 ):
+            if hallway[i] != ".":
+                return None
+
+        return 2 + 2*(r2-r1)
+
+    def movefromroom(state, roomid, htarget):
+        newstate = list(state)
+        moving = state[roomid][0]
+        newstate[roomid] = newstate[roomid][1:]
+        newstate[-1] = tuple( state[-1][i] if i != htarget else moving for i in range(0,7) )
+        return tuple(newstate)
+
+    def movetoroom(state, hfrom, roomid):
+        newstate = list(state)
+        moving = state[-1][hfrom]
+        newstate[roomid] = (moving,) + newstate[roomid]
+        newstate[-1] = tuple( state[-1][i] if i != hfrom else "." for i in range(0,7) )
+        return tuple(newstate)
+
+    def moveroomroom(state, rfrom, rto):
+        newstate = list(state)
+        moving = state[rfrom][0]
+        newstate[rfrom] = state[rfrom][1:]
+        newstate[rto] = (moving,) + state[rto]
+        return tuple(newstate)
+
+    verbose = False
+
+    showcost = 0
+    
+    while not tosearch.empty() and not finalstate in costs:
+        cost,state = tosearch.get()
+
+        if state in costs:
+            continue
+        costs[state] = cost
+        
+        if cost >= showcost + 1000 or verbose:
+            print("")
+            if state in sids:
+                print(f"Checking from state {sids[state]} with cost {cost}")
+            else:
+                print(f"Checking from state with cost {cost}")
+            show(state)
+            showcost = cost
+
+        for roomid in range(0,4):
+            roomcontents = chr(ord('A') + roomid)
+            hallindex = 1 + roomid
+
+            if not iscleanroom(state[roomid],roomcontents):
+                if verbose:
+                    print(f"Move {state[roomid][0]} out of room {roomid} ({state[roomid]})")
+
+                roomsteps = roomsize - len(state[roomid])
+                moving = state[roomid][0]
+                movingcost = movecosts[moving]
+                for htarget in range(0,7):
+                    plen = clearpathlength(state[-1], htarget, roomid)
+                    if plen != None:
+                        steps = plen + roomsteps
+                        movecost = movingcost * steps
+                        newcost = cost + movecost
+                        newstate = movefromroom(state, roomid, htarget)
+
+                        if verbose:
+                            print(f"  To index {htarget} with {plen}+{roomsteps} steps at cost {movecost} (total: {newcost})")
+                            show(newstate)
+
+                        tosearch.put( (newcost, newstate) )
+
+            elif len(state[roomid]) < roomsize:
+                if verbose:
+                    print(f"Move {roomcontents} into room {roomid} ({state[roomid]})")
+
+                roomsteps = roomsize - len(state[roomid]) - 1
+                
+                for hfrom in range(0,7):
+                    if state[-1][hfrom] == roomcontents:
+                        plen = clearpathinlength(state[-1], hfrom, roomid)
+                        if plen != None:
+                            steps = plen + roomsteps
+                            movingcost = movecosts[roomcontents]
+                            movecost = movingcost * steps
+                            newcost = cost + movecost
+                            newstate = movetoroom(state, hfrom, roomid)
+
+                            if verbose:
+                                print(f"  From index {hfrom} with {plen}+{roomsteps} steps at cost {movecost} (total: {newcost})")
+                                show(newstate)
+
+                            tosearch.put( (newcost, newstate) )
+                
+                for otherroom in range(0,4):
+                    if otherroom == roomid:
+                        continue
+
+                    if state[otherroom] and state[otherroom][0] == roomcontents:
+                        plen = clearroomlength(state[-1], roomid, otherroom)
+                        if plen != None:
+                            otherroomsteps = roomsize - len(state[otherroom]) 
+                            steps = plen + roomsteps + otherroomsteps
+
+                            movingcost = movecosts[roomcontents]
+                            movecost = movingcost * steps
+
+                            newcost = cost + movecost
+                            newstate = moveroomroom(state, otherroom, roomid)
+
+                            if verbose:
+                                print(f"  From room {otherroom} with {plen}+{otherroomsteps}+{roomsteps} steps at cost {movecost} (total: {newcost})")
+                                show(newstate)
+
+                            tosearch.put( (newcost, newstate) )
+                    
+                    
+    if finalstate in costs:
+        return costs[finalstate]
+    else:
+        return None
+    
+if args.p1:
+    print("Doing part 1")
+
+    initstate = parseState(data)
+
+    show(initstate)
+
+    path = findPath(initstate)
 
     print(f"Best path: {path}")
     
@@ -346,23 +299,12 @@ if args.p2:
     newlines = [ "#D#C#B#A#",
                  "#D#B#A#C#", ]
 
-    initstate = []
-    for d in newlines:
-        for c in d:
-            if c in "ABCD":
-                initstate.append(c)
-    for d in data:
-        for c in d:
-            if c in "ABCD":
-                initstate.append(c)
-    for i in range(0,7):
-        initstate.append(".")
-    initstate = tuple(initstate)
-    
-    finalstate = ( 'A', 'B', 'C', 'D', 'A', 'B', 'C', 'D', 'A', 'B', 'C', 'D',
-                   'A', 'B', 'C', 'D', '.', '.', '.', '.', '.', '.', '.', )
+    newdata = data[0:3] + newlines + data[3:]
 
+    initstate = parseState(newdata)
 
-    path = findPath2(initstate, finalstate)
+    show(initstate)
+
+    path = findPath(initstate)
 
     print(f"Best path: {path}")
