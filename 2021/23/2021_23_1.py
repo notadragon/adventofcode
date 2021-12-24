@@ -189,8 +189,6 @@ def findPath(initstate):
 
     verbose = False
 
-    showcost = 0
-    
     while not tosearch.empty() and not finalstate in costs:
         cost,state = tosearch.get()
 
@@ -198,41 +196,23 @@ def findPath(initstate):
             continue
         costs[state] = cost
         
-        if cost >= showcost + 1000 or verbose:
+        if verbose:
             print("")
             if state in sids:
                 print(f"Checking from state {sids[state]} with cost {cost}")
             else:
                 print(f"Checking from state with cost {cost}")
             show(state)
-            showcost = cost
 
+        #if any can be moved to final room that's it, no need to explore other options.
+        found = False
         for roomid in range(0,4):
+            if found:
+                break
+            
             roomcontents = chr(ord('A') + roomid)
-            hallindex = 1 + roomid
 
-            if not iscleanroom(state[roomid],roomcontents):
-                if verbose:
-                    print(f"Move {state[roomid][0]} out of room {roomid} ({state[roomid]})")
-
-                roomsteps = roomsize - len(state[roomid])
-                moving = state[roomid][0]
-                movingcost = movecosts[moving]
-                for htarget in range(0,7):
-                    plen = clearpathlength(state[-1], htarget, roomid)
-                    if plen != None:
-                        steps = plen + roomsteps
-                        movecost = movingcost * steps
-                        newcost = cost + movecost
-                        newstate = movefromroom(state, roomid, htarget)
-
-                        if verbose:
-                            print(f"  To index {htarget} with {plen}+{roomsteps} steps at cost {movecost} (total: {newcost})")
-                            show(newstate)
-
-                        tosearch.put( (newcost, newstate) )
-
-            elif len(state[roomid]) < roomsize:
+            if iscleanroom(state[roomid],roomcontents) and len(state[roomid]) < roomsize:
                 if verbose:
                     print(f"Move {roomcontents} into room {roomid} ({state[roomid]})")
 
@@ -253,8 +233,12 @@ def findPath(initstate):
                                 show(newstate)
 
                             tosearch.put( (newcost, newstate) )
+                            found = True
+                            break
                 
                 for otherroom in range(0,4):
+                    if found:
+                        break
                     if otherroom == roomid:
                         continue
 
@@ -275,6 +259,33 @@ def findPath(initstate):
                                 show(newstate)
 
                             tosearch.put( (newcost, newstate) )
+                            found = True
+                            break
+
+        if not found:
+            for roomid in range(0,4):
+                roomcontents = chr(ord('A') + roomid)                
+                if not iscleanroom(state[roomid],roomcontents):
+                    if verbose:
+                        print(f"Move {state[roomid][0]} out of room {roomid} ({state[roomid]})")
+
+                    roomsteps = roomsize - len(state[roomid])
+                    moving = state[roomid][0]
+                    movingcost = movecosts[moving]
+                    for htarget in range(0,7):
+                        plen = clearpathlength(state[-1], htarget, roomid)
+                        if plen != None:
+                            steps = plen + roomsteps
+                            movecost = movingcost * steps
+                            newcost = cost + movecost
+                            newstate = movefromroom(state, roomid, htarget)
+
+                            if verbose:
+                                print(f"  To index {htarget} with {plen}+{roomsteps} steps at cost {movecost} (total: {newcost})")
+                                show(newstate)
+
+                            tosearch.put( (newcost, newstate) )
+
                     
                     
     if finalstate in costs:
