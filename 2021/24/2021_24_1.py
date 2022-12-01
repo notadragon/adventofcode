@@ -306,3 +306,234 @@ if args.p1 or args.p2:
         result = runInstructions(instructions, n )
         print(f"{strmnum(n)} -> {result}")
         break
+
+
+
+def optimize(instructions):
+    # peform the following optimizatinos to benefit range analysis
+    #  'mul q 0' instructions move backwards as long as previous instruction does not use q
+    #  'inp q' gets
+
+    newinstructions = []
+
+    # inp does not use existing value of the variable, set it to 0 before input so that set can move up.
+    for instr in instructions:
+        if instr[0] == "inp":
+            newinstructions.append( ( "mul", instr[1], "0" ) )
+        newinstructions.append(instr)
+
+    # move up any variable clears to right after their value is used
+    for ndx in range(0,len(newinstructions)):
+        instr = newinstructions[ndx]
+        if instr[0] == "mul" and instr[2] == "0":
+            var = instr[1]
+            tondx = ndx
+            while tondx > 0 and not var in newinstructions[tondx-1]:
+                newinstructions[tondx-1],newinstructions[tondx] = newinstructions[tondx],newinstructions[tondx-1]
+                tondx = tondx - 1
+
+    for ndx in range(0,len(newinstructions)):
+        instr = newinstructions[ndx]
+        if instr[0] == "inp":
+            var = instr[1]
+            tondx = ndx
+            while tondx < len(newinstructions)-1 and not var in newinstructions[tondx+1]:
+                newinstructions[tondx+1],newinstructions[tondx] = newinstructions[tondx],newinstructions[tondx+1]
+                tondx = tondx + 1
+
+    # setting to 0 at start is pointless
+    while newinstructions[0][0] == "mul" and newinstructions[0][2] == "0":
+        newinstructions = newinstructions[1:]
+    
+    return tuple(newinstructions)
+
+def addinterval(vals, interval):
+    yielded = False
+    for v in vals:
+        if yielded or v[1] < interval[0]-1:
+            yield v
+        elif v[0] > interval[1]+1:
+            yielded = True
+            yield interval
+            yield v
+        else:
+            interval = ( min(interval[0],v[0]), max(interval[1],v[1]) )
+
+    if not yielded:
+        yield interval
+        
+
+class VRange:
+    def __init__(self):
+        self.vals = ()
+
+    def add(self,v):
+        return self.addRange(v,v)
+
+    def addRange(self,b,e):
+        output = VRange()
+        output.vals = tuple(addinterval(self.vals,(b,e)))
+
+        return output
+
+    def __str__(self):
+        if len(self.vals) > 10:
+            return str(self.vals[0:10]) + "..."
+        else:
+            return str(self.vals)
+
+
+    def __repr__(self):
+        if len(self.vals) > 10:
+            return str(self.vals[0:10]) + "..."
+        else:
+            return str(self.vals)
+
+    def isZero(self):
+        return self.vals == ( (0,0) )
+        
+    def isOne(self):
+        return self.vals == ( (1,1) )
+        
+    def addop(self,other):
+        if self.isZero():
+            return other
+        elif other.isZero():
+            return self
+        
+        output = VRange()
+        for i1 in self.vals:
+            for i2 in other.vals:
+                output = output.addRange( i1[0] + i2[0], i1[1] + i2[1] )
+        return output
+
+    def mulop(self,other):
+        if self.isZero() or other.isZero():
+            return VRange().add(0)
+        output = VRange()
+        for i1 in self.vals:
+            for a in range(i1[0],i1[1]+1):
+                for i2 in other.vals:
+                    for b in range(i2[0],i2[1]+1):
+                        output = output.add(a*b)
+        return output
+
+    def modop(self,other):
+        output = VRange()
+        for i1 in self.vals:
+            for a in range(i1[0],i1[1]+1):
+                for i2 in other.vals:
+                    for b in range(i2[0],i2[1]+1):
+                        output = output.add(a%b)
+        return output
+
+    def divop(self,other):
+        if other.isOne():
+            return self
+        output = VRange()
+        for i1 in self.vals:
+            for v1 in range(i1[0],i1[1]+1):
+                for i2 in other.vals:
+                    for v2 in range(i2[0],i2[1]+1):
+                        mul = 1
+                        if v1 < 0:
+                            mul *= -1
+                        if v2 < 0:
+                            mul *= -1
+                        output = output.add( mul * (abs(v1) // abs(v2)) )
+        return output
+
+    def eqlop(self,other):
+        if self.vals == other.vals:
+            return VRange().add(1)
+
+        n1 = 0
+        n2 = 0
+        while n1 < len(self.vals) and n2 < len(other.vals):
+            i1 = self.vals[n1]
+            i2 = other.vals[n2]
+            if i1[1] < i2[0]:
+                n1 = n1 + 1
+                continue
+            if i2[1] < i1[0]:
+                n2 = n2 + 1
+                continue
+
+            return VRange().addRange(0,1)
+
+        return VRange().add(0)
+
+
+def testRanges():
+    v = VRange()
+    print(f"{v}")
+
+    v = v.add(1)
+    print(f"{v}")
+
+    v = v.add(2)
+    print(f"{v}")
+
+    v = v.add(4)
+    print(f"{v}")
+
+    v = v.add(6)
+    print(f"{v}")
+
+    v = v.add(3)
+    print(f"{v}")
+
+    v = v.addRange(0,7)
+    print(f"{v}")
+
+    v = v.addRange(-4,-2)
+    print(f"{v}")
+
+    v2 = VRange().addRange(0,4)
+    v3 = VRange().addRange(2,4)
+    v4 = v2.addop(v3)
+    print(f"{v2} + {v3} = {v4}")
+    
+            
+def vranges(instructions):
+    variables = [ VRange().add(0), VRange().add(0), VRange().add(0), VRange().add(0) ]
+    ndx = 0
+    
+    def getval(val):
+        if val in "wxyz":
+            return variables[varindex[val]]
+        else:
+            return VRange().add(int(val))
+
+    def setvar(var, val):
+        variables[varindex[var]] = val
+            
+    for instr in instructions:
+        if instr[0] == "inp":
+            setvar(instr[1], VRange().addRange(1,9))
+            ndx = ndx + 1
+        elif instr[0] == "add":
+            setvar(instr[1], getval(instr[1]).addop(getval(instr[2])))
+        elif instr[0] == "mul":
+            setvar(instr[1], getval(instr[1]).mulop(getval(instr[2])))
+        elif instr[0] == "div":
+            setvar(instr[1], getval(instr[1]).divop(getval(instr[2])))
+        elif instr[0] == "mod":
+            setvar(instr[1], getval(instr[1]).modop(getval(instr[2])))
+        elif instr[0] == "eql":
+            setvar(instr[1], getval(instr[1]).eqlop(getval(instr[2])))
+
+        yield ( instr, tuple(variables) )
+                
+    return variables
+    
+
+if args.pt2:
+    print("Doing testing 2")
+
+    testRanges()
+    
+    optinstructions = optimize(instructions)
+
+    for instr,variables in vranges(optinstructions):
+        print(f"{instr} -> {variables}")

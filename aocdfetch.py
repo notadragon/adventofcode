@@ -14,7 +14,7 @@ if not os.path.exists(configfile):
     print("Could not determine config file")
     sys.exit(-1)
 
-configdata = { l[0:l.index("=")].strip() : l[l.index("=")+1:].strip() for l in open(configfile).readlines() }
+configdata = { l[0:l.index("=")].strip() : l[l.index("=")+1:].strip() for l in open(configfile).readlines() if l}
 
 relpath = os.path.relpath(os.getcwd(), rootdir)
 m = re.match("^(\d\d\d\d)/(\d+)$", relpath)
