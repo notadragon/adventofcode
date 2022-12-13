@@ -176,8 +176,8 @@ if args.p2:
     #print("MAP:")
     #showMap(elevations)
 
-    #print("PATH:")
-    #showPath(elevations,path)
+    print("PATH:")
+    showPath(elevations,path)
     
     #print(f"Path: {path}")
     print(f"Path Length: {len(path)-1}")
