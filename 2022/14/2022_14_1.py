@@ -162,14 +162,15 @@ if args.p2:
             if sandloc == sandorigin:
                 break
     else:
-        minx = min(g[0] for g in grid.keys())
-        maxx = max(g[0] for g in grid.keys())
 
         grid[sandorigin] = "o"
         total = total + 1
 
+        minx = sandorigin[0]
+        maxx = sandorigin[0]
+        
         for y in range(sandorigin[1], maxy+1):
-            for x in range(minx,maxx+1):
+            for x in range(minx-1,maxx+2):
                 loc = (x,y)
                 if loc in grid:
                     continue
@@ -182,6 +183,8 @@ if args.p2:
                 if issand:
                     total = total + 1
                     grid[loc] = "o"
+                    minx = min(minx,x)
+                    maxx = max(maxx,x)
         
     printgrid(grid)
 
