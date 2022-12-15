@@ -153,13 +153,36 @@ if args.p2:
         grid[ (x,floorheight) ] = "#"
     
     total = 0
-    while True:
-        sandloc = addSand( sandorigin, grid, maxy )
-        if sandloc == None:
-            break
+    if False:
+        while True:
+            sandloc = addSand( sandorigin, grid, maxy )
+            if sandloc == None:
+                break
+            total = total + 1
+            if sandloc == sandorigin:
+                break
+    else:
+        minx = min(g[0] for g in grid.keys())
+        maxx = max(g[0] for g in grid.keys())
+
+        grid[sandorigin] = "o"
         total = total + 1
-        if sandloc == sandorigin:
-            break
-        #printgrid(grid)
+
+        for y in range(sandorigin[1], maxy+1):
+            for x in range(minx,maxx+1):
+                loc = (x,y)
+                if loc in grid:
+                    continue
+                issand = False
+                for sanddelta in sanddeltas:
+                    sourceloc = (loc[0] - sanddelta[0], loc[1] - sanddelta[1])
+                    if sourceloc in grid and grid[sourceloc] == "o":
+                        issand = True
+                        break
+                if issand:
+                    total = total + 1
+                    grid[loc] = "o"
+        
+    printgrid(grid)
 
     print(f"Total Sand: {total}")
