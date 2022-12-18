@@ -115,8 +115,17 @@ def paths(valves, shortestpaths, loc, openvalves, timelimit):
         
     else:
         yield (0, ())
-    
-def paths2(valves, shortestpaths, loc, openvalves):
+
+def paths2(valves, shortestpaths, memos, loc, openvalves):
+    key = (loc,openvalves)
+    if key in memos:
+        return memos[key]
+    else:
+        val = dopaths2(valves, shortestpaths, memos, loc, openvalves)
+        memos[key] = val
+        return val
+        
+def dopaths2(valves, shortestpaths, memos, loc, openvalves):
     # loc is list of pairs, timelimit,location
     # yield (<totalpressure>, (path,) )
 
@@ -128,12 +137,12 @@ def paths2(valves, shortestpaths, loc, openvalves):
         pressure = (nexttimelimit-1) * valves[nextloc][0]
         step = f"open-{nextloc} ({pressure} by {nextid})"
         
-        newloc = [ (nexttimelimit-1,nextloc,nextid), ] + loc[1:]
+        newloc = [ (nexttimelimit-1,nextloc,nextid), ] + list(loc[1:])
         newloc.sort(reverse=True)
         newloc = tuple(newloc)
         newopen = openvalues.union((nextloc))
         
-        bestrest = paths2(valves, shortestpaths, newloc, newopen)
+        bestrest = paths2(valves, shortestpaths, memos, newloc, newopen)
         return (pressure + bestrest[0], (step,) + bestrest[1], )
 
     nextstep = []
@@ -149,9 +158,10 @@ def paths2(valves, shortestpaths, loc, openvalves):
         nextstep.append( (nextpressure, shortest, key) )
 
     if not nextstep:
-        newloc = [ (0, nextloc, nextid), ] + loc[1:]
+        newloc = [ (0, nextloc, nextid), ] + list(loc[1:])
         newloc.sort(reverse=True)
-        return paths2(valves, shortestpaths, newloc, openvalves)
+        newloc = tuple(newloc)
+        return paths2(valves, shortestpaths, memos, newloc, openvalves)
     
     else:
         #determine number of movers:
@@ -164,27 +174,26 @@ def paths2(valves, shortestpaths, loc, openvalves):
             newloc = []
             pressure = 0
             desc = []
+            newvalves = set()
             for n,step in enumerate(steps):
                 nextpressure, shortest, key = step
                 nid = loc[n][2]
                 newloc.append( (nexttimelimit - shortest -1, key, nid) )
-                openvalves.add(key)
+                newvalves.add(key)
                 pressure = pressure + nextpressure
                 desc.append(f"{shortest}->{key} ({nid})")
                 desc.append(f"open-{key} ({nextpressure} by {nid})")
             desc = tuple(desc)
+            newvalves = openvalves.union(newvalves)
             
             newloc.extend( loc[nummovers:] )
             newloc.sort(reverse=True)
+            newloc = tuple(newloc)
                 
-            rest = paths2(valves, shortestpaths, newloc, openvalves)
+            rest = paths2(valves, shortestpaths, memos, newloc, newvalves)
             if not bestrest or (pressure + rest[0]) > bestrest[0]:
                 bestrest = ( pressure + rest[0],  desc + rest[1],)
 
-            for step in steps:
-                nextpressure, shortest, key = step
-                openvalves.remove(key)
-                
         return bestrest
 
     
@@ -195,7 +204,7 @@ if args.p1:
         timelimit = 30
         loc = "AA"
     
-        openvalves = frozenset()
+        openvalves = set()
         maxpressure = 0
         shortestpaths = {}
         for p in paths(valves, shortestpaths, loc, openvalves, timelimit):
@@ -204,11 +213,12 @@ if args.p1:
                 maxpressure = p[0]
     else:
         timelimit = 30
-        loc = [ (30,"AA","H",), ]
-        openvalves = set()
+        loc = ( (30,"AA","H",), )
+        openvalves = frozenset()
         maxpressure = 0
         shortestpaths = {}
-        p = paths2(valves, shortestpaths, loc, openvalves)
+        memos = {}
+        p = paths2(valves, shortestpaths, memos, loc, openvalves)
         if p[0] > maxpressure:
             print(f"Best Path: {p}")
             maxpressure = p[0]
@@ -218,11 +228,11 @@ if args.p2:
     print("Doing part 2")
 
     timelimit = 26
-    loc = [ (26,"AA","H",), (26,"AA","H",), ]
-    openvalves = set()
+    loc = ( (26,"AA","H",), (26,"AA","H",), )
+    openvalves = frozenset()
     maxpressure = 0
     shortestpaths = {}
-    p = paths2(valves, shortestpaths, loc, openvalves)
+    p = paths2(valves, shortestpaths, memos, loc, openvalves)
     if p[0] > maxpressure:
         print(f"Best Path: {p}")
         maxpressure = p[0]
