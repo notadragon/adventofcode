@@ -87,12 +87,22 @@ if args.p2:
                     return digitsmap[k]
 
     total = 0
+    ftotal = 0
     for x in values:
-        digits = ( findfirst(x), findlast(x) )
-        print(f"{x} -> {digits}")
+        found = re.findall("\d|one|two|three|four|five|six|seven|eight|nine|zero", x)
+        fdigits = ( digitsmap[found[0]], digitsmap[found[-1]], )
 
+        digits = ( findfirst(x), findlast(x) )
+        print(f"{x} -> {digits} / {fdigits}")
+
+        fval = fdigits[0] * 10 + fdigits[1]
+        ftotal = ftotal + fval
+        
         val = digits[0] * 10 + digits[1]
         total = total + val
 
-    print(f"Total: {total}")
+        if digits != fdigits:
+            print(f"DIFFERENCE: {x} =  {digits} / {fdigits} -> {fval-val}")
+
+    print(f"Total: {total} ({ftotal})")
         
