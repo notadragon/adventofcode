@@ -57,77 +57,10 @@ def show(colors):
             else:
                 row.append(".")
         print("".join(row))
-
-if args.p1:
-    print("Doing part 1")
-
-    loc = (0,0)
-    colors = { loc : "#000000" }
-
-    for d, s, c in data:
-        delta = deltas[d]
-        for i in range(0,s):
-            loc = ( loc[0] + delta[0] , loc[1] + delta[1], )
-            colors[loc] = c
-
-    #show(colors)
-    print(f"Border size: {len(colors)}")
-
-    minx = min( l[0] for l in colors.keys() )
-    maxx = max( l[0] for l in colors.keys() )
-    miny = min( l[1] for l in colors.keys() )
-    maxy = max( l[1] for l in colors.keys() )
-
-    outside = set()
-    for y in range(miny, maxy+1):
-        for x in range(minx,maxx+1):
-            loc = (x,y)
-            if loc in colors or loc in outside:
-                continue
-
-            tofill = set()
-            out = False
-
-            tosearch = collections.deque()
-            tosearch.append( loc )
-
-            while tosearch:
-                l = tosearch.popleft()
-                if l in colors or l in tofill:
-                    continue
-                if l in outside:
-                    out = True
-                if l[0] < minx or l[0] > maxx or l[1] < miny or l[1] > maxy:
-                    out = True
-                    continue
-                tofill.add(l)
-                for d in deltas.values():
-                    tosearch.append( ( l[0] + d[0], l[1] + d[1] ) )
-
-            if out:
-                outside.update(tofill)
-            else:
-                for l in tofill:
-                    colors[l] = "#000000"
-
-    #show(colors)
-    print(f"Filled Size: {len(colors)}")
         
-    
-if args.p1:
-    print("Doing part 1")
-
-    rundata(data, False);
-    
-if args.p2:
-    print("Doing part 2")
-
-    rundata(data, True);
-    
 def rundata(data, p2):
     loc = (0,0)
-    colors = { loc : "#000000" }
-
+    rects = set()
     for d, s, c in data:
         if p2:
             if c[-1] == "0":
@@ -141,52 +74,128 @@ def rundata(data, p2):
             s = int(c[0:-1],16)
 
         delta = deltas[d]
-        for i in range(0,s):
-            loc = ( loc[0] + delta[0] , loc[1] + delta[1], )
-            colors[loc] = c
+        endloc = ( loc[0] + s * delta[0], loc[1] + s * delta[1])
+        rect = ( min(loc[0], endloc[0]), min(loc[1], endloc[1]),
+                 max(loc[0], endloc[0])+1, max(loc[1], endloc[1])+1 )
+        
 
+        rects.add(rect)
+        loc = endloc
+
+    #colors = {}
+    #for r in rects:
+    #    for x in range(r[0], r[2]):
+    #        for y in range(r[1], r[3] ):
+    #            colors[ (x,y) ] = 1
     #show(colors)
-    print(f"Border size: {len(colors)}")
 
-    minx = min( l[0] for l in colors.keys() )
-    maxx = max( l[0] for l in colors.keys() )
-    miny = min( l[1] for l in colors.keys() )
-    maxy = max( l[1] for l in colors.keys() )
+    xvals = set()
+    yvals = set()
+    for d in (-1,0,1):
+        xvals.update( r[0] + d for r in rects )
+        xvals.update( r[2]-1 + d for r in rects )
+        yvals.update( r[1] + d for r in rects )
+        yvals.update( r[3]-1 + d for r in rects )
 
-    outside = set()
-    for y in range(miny, maxy+1):
-        for x in range(minx,maxx+1):
-            loc = (x,y)
-            if loc in colors or loc in outside:
+    xvals = list(xvals)
+    xvals.sort()
+
+    yvals = list(yvals)
+    yvals.sort()
+
+    #print(f"Xvals: {xvals}")
+    #print(f"Yvals: {yvals}")
+
+    splitrects = set()
+    for r in rects:
+        #print(f"  Rect: {r}")
+        xs = [ x for x in xvals if x >= r[0] and x <= r[2] ]
+        ys = [ y for y in yvals if y >= r[1] and y <= r[3] ]
+        #print(f"     -> {xs} * {ys}")
+
+        for (minx, maxx) in zip( xs[0:-1], xs[1:] ):
+            for (miny, maxy) in zip( ys[0:-1], ys[1:] ):
+                splitrects.add( (minx, miny, maxx, maxy) )
+
+    #colors = {}
+    #for r in splitrects:
+    #    for x in range(r[0], r[2]):
+    #        for y in range(r[1], r[3] ):
+    #            colors[ (x,y) ] = 1
+    #show(colors)
+
+    def rectsize(rs):
+        total = 0
+        for r in rs:
+            total = total + ( r[2] - r[0] ) * ( r[3] - r[1] )
+        return total
+
+    insiderects = set()
+    outsiderects = set()
+
+    rectgrid = {}
+
+    for xr in range(0,len(xvals)-1):
+        for yr in range(0,len(yvals)-1):
+            r = ( xvals[xr], yvals[yr], xvals[xr+1], yvals[yr+1] )
+
+            rectgrid[ (xr, yr) ] = r
+
+
+    insiderects = set()
+    outsiderects = set()
+    
+    for gloc, r in rectgrid.items():
+        if r in insiderects or r in outsiderects or r in splitrects:
+            continue
+
+        tosearch = collections.deque()
+        tosearch.append(gloc)
+
+        found = set()
+        outside = False
+        
+        while tosearch:
+            l = tosearch.popleft();
+            if not l in rectgrid:
+                outside = True
                 continue
 
-            tofill = set()
-            out = False
+            lr = rectgrid[l]
+            if lr in outsiderects:
+                outside = True
+                continue
+            
+            if lr in found or lr in splitrects or lr in insiderects:
+                continue
+            
+            found.add(lr)
+            for d in deltas.values():
+                dl = ( l[0] + d[0], l[1] + d[1] )
+                tosearch.append( dl )
 
-            tosearch = collections.deque()
-            tosearch.append( loc )
+        if outside:
+            outsiderects.update(found)
+        else:
+            insiderects.update(found)
 
-            while tosearch:
-                l = tosearch.popleft()
-                if l in colors or l in tofill:
-                    continue
-                if l in outside:
-                    out = True
-                if l[0] < minx or l[0] > maxx or l[1] < miny or l[1] > maxy:
-                    out = True
-                    continue
-                tofill.add(l)
-                for d in deltas.values():
-                    tosearch.append( ( l[0] + d[0], l[1] + d[1] ) )
+    print(f"Border size: {rectsize(splitrects)}")
 
-            if out:
-                outside.update(tofill)
-            else:
-                for l in tofill:
-                    colors[l] = "#000000"
-
+    print(f"Inside size: {rectsize(insiderects)}")
+    print(f"Lake size: {rectsize(splitrects) + rectsize(insiderects)}")
     #show(colors)
-    print(f"Filled Size: {len(colors)}")
-        
+    #print(f"Filled Size: {len(colors)}")
     
+
+
+    
+if args.p1:
+    print("Doing part 1")
+
+    rundata(data, False);
+    
+if args.p2:
+    print("Doing part 2")
+
+    rundata(data, True);
     
