@@ -99,3 +99,92 @@ if args.p1:
     
 if args.p2:
     print("Doing part 2")
+
+    ranges = {
+        "x" : (1,4000),
+        "m" : (1,4000),
+        "n" : (1,4000),
+        "s" : (1,4000)
+        }
+
+    def findall(wfs):
+
+        accepted = []
+        rejected = []
+
+        pending = [
+            ( {"x" : (1,4000),"m" : (1,4000),"a" : (1,4000),"s" : (1,4000)} , "in" )
+            ]
+
+        while pending:
+            newpending = []
+
+            for p,wf in pending:
+                if wf == "A":
+                    accepted.append(p)
+                    continue
+                if wf == "R":
+                    rejected.append(p)
+                    continue
+
+                wfd = wfs[wf]
+                for instr in wfd:
+                    if len(instr) == 1:
+                        newpending.append( (p,instr[0]) )
+                        break
+                    
+                    r = p[instr[0]]
+                    c = instr[2]
+
+                    if instr[1] == "<":
+                        if c <= r[0]:
+                            match = None
+                            rest = r
+                        elif r[1] <= c:
+                            match = r
+                            rest = None
+                        else:
+                            match = (r[0],c)
+                            rest = (c,r[1])
+                    elif instr[1] == ">":
+                        if r[0] > c:
+                            match = r
+                            rest = None
+                        elif r[1] <= c:
+                            match = None
+                            rest = r
+                        else:
+                            match = (c+1,r[1])
+                            rest = (r[0],c+1)
+                            
+                            
+                    if match and match[0] < match[1]:
+                        p2 = p.copy()
+                        p2[instr[0]] = match
+                        newpending.append( (p2,instr[3]) )
+                        
+                    if rest and rest[0] < rest[1]:
+                        p2 = p.copy()
+                        p2[instr[0]] = rest
+                        p = p2
+                    else:
+                        break
+
+            pending = newpending
+
+        print(f"Accepted: {accepted}")
+        print(f"Rejected: {rejected}")
+
+        total = 0
+        for p in accepted:
+            pt = 1
+            for v in p.values():
+                pt = pt * (v[1] - v[0])
+            total = total + pt
+        print(f"Total: {total}")
+        
+    wfs = { k : w for k,w in workflows }
+
+    findall(wfs)
+
+    
