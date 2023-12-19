@@ -100,20 +100,13 @@ if args.p1:
 if args.p2:
     print("Doing part 2")
 
-    ranges = {
-        "x" : (1,4000),
-        "m" : (1,4000),
-        "n" : (1,4000),
-        "s" : (1,4000)
-        }
-
     def findall(wfs):
 
         accepted = []
         rejected = []
 
         pending = [
-            ( {"x" : (1,4000),"m" : (1,4000),"a" : (1,4000),"s" : (1,4000)} , "in" )
+            ( {"x" : (1,4001),"m" : (1,4001),"a" : (1,4001),"s" : (1,4001)} , "in" )
             ]
 
         while pending:
